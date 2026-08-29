@@ -1,0 +1,81 @@
+// Inventory.Domain/Entities/Product.cs
+namespace Inventory.Domain.Entities;
+
+public class Product
+{
+    public Guid Id { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public string Category { get; private set; } = string.Empty;
+    public decimal Price { get; private set; }
+    public int Stock { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+
+    // Constructor privado para requerimientos de EF Core / Dapper
+    private Product() { }
+
+    // Constructor privado para forzar el uso del Factory Method
+    private Product(Guid id, string name, string category, decimal price, int stock, DateTime createdAt)
+    {
+        Id = id;
+        Name = name;
+        Category = category;
+        Price = price;
+        Stock = stock;
+        CreatedAt = createdAt;
+    }
+
+    /// <summary>
+    /// Factory Method para asegurar la creación de una entidad en un estado válido.
+    /// </summary>
+    public static Product Create(string name, string category, decimal price, int stock)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("El nombre del producto no puede estar vacío.", nameof(name));
+
+        if (string.IsNullOrWhiteSpace(category))
+            throw new ArgumentException("La categoría del producto no puede estar vacía.", nameof(category));
+
+        if (price < 0)
+            throw new ArgumentOutOfRangeException(nameof(price), "El precio no puede ser negativo.");
+
+        if (stock < 0)
+            throw new ArgumentOutOfRangeException(nameof(stock), "El stock inicial no puede ser negativo.");
+
+        return new Product(
+            id: Guid.NewGuid(),
+            name: name.Trim(),
+            category: category.Trim(),
+            price: price,
+            stock: stock,
+            createdAt: DateTime.UtcNow
+        );
+    }
+
+    public void UpdatePrice(decimal newPrice)
+    {
+        if (newPrice < 0)
+            throw new ArgumentOutOfRangeException(nameof(newPrice), "El precio no puede ser negativo.");
+
+        Price = newPrice;
+    }
+
+    public void AddStock(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("La cantidad a ingresar debe ser mayor a cero.", nameof(quantity));
+
+        Stock += quantity;
+    }
+
+    public void RemoveStock(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("La cantidad a retirar debe ser mayor a cero.", nameof(quantity));
+
+        if (Stock - quantity < 0)
+            throw new InvalidOperationException($"Stock insuficiente. Stock actual: {Stock}, solicitado: {quantity}.");
+
+        Stock -= quantity;
+    }
+}
+

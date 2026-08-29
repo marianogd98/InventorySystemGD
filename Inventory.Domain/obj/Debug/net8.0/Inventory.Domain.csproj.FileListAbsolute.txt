@@ -1,0 +1,12 @@
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\bin\Debug\net8.0\Inventory.Domain.deps.json
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\bin\Debug\net8.0\Inventory.Domain.dll
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\bin\Debug\net8.0\Inventory.Domain.pdb
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.AssemblyInfoInputs.cache
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.AssemblyInfo.cs
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.csproj.CoreCompileInputs.cache
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.sourcelink.json
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.dll
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\refint\Inventory.Domain.dll
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\Inventory.Domain.pdb
+c:\Users\Mariano\Documents\projects\InventorySystemGD\Inventory.Domain\obj\Debug\net8.0\ref\Inventory.Domain.dll
