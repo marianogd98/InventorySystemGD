@@ -1,0 +1,1 @@
+# Mini Sistema de Gestión de Inventario GD .NET 7/8.
