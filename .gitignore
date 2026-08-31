@@ -1,0 +1,42 @@
+﻿## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio cache & temporary files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+.vscode/
+
+## Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userproperties
+
+## Publish output
+publish/
+**/publish/
+
+## Secrets & environment overrides
+appsettings*.Development.json
+appsettings*.Local.json
+*.local.json
