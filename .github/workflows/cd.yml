@@ -1,4 +1,4 @@
-﻿name: CD Pipeline (Deployment & Artifacts)
+name: CD Pipeline (Deployment & Artifacts)
 
 on:
   push:
@@ -30,14 +30,12 @@ jobs:
         run: >
           dotnet publish Inventory.Api/Inventory.Api.csproj
           --configuration Release
-          --no-restore
           --output ./publish/api
 
       - name: Publish Web Frontend (Release)
         run: >
           dotnet publish Inventory.Web/Inventory.Web.csproj
           --configuration Release
-          --no-restore
           --output ./publish/web
 
       - name: Upload Web API Artifact
