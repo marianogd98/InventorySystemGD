@@ -118,3 +118,39 @@ dotnet test
 * **Modo Oscuro / Claro:** Detección de preferencia del sistema operativo y selector persistente en la barra de navegación.
 * **Notificaciones SweetAlert2:** Retroalimentación visual interactiva en la creación de productos y errores de validación.
 * **Seguridad:** Sanitización de entradas contra inyecciones SQL en cliente y servidor.
+
+---
+
+## 🔄 Git Flow & Integración Continua (CI/CD con GitHub Actions)
+
+El proyecto cuenta con integración y despliegue continuo automatizado configurado en `.github/workflows/`:
+
+```
+              ┌───────────────┐
+              │  mariano-dev  │ (Desarrollo de nuevas funcionalidades)
+              └───────┬───────┘
+                      │ PR (CI Pipeline: Build + Tests)
+                      ▼
+              ┌───────────────┐
+              │      dev      │ (Integración continua / QA)
+              └───────┬───────┘
+                      │ Merge / Tag Release
+                      ▼
+              ┌───────────────┐
+              │     prod      │ (CD Pipeline: Publicación de Artefactos de Release)
+              └───────────────┘
+```
+
+1. **Pipeline de Integración Continua ([`ci.yml`](.github/workflows/ci.yml)):**
+   * **Disparadores:** `push` y `pull_request` sobre ramas `prod`, `main`, `dev`, `mariano-dev`, `feature/**`, `bugfix/**`, `hotfix/**`.
+   * **Acciones:**
+     * Restauración con caché de paquetes NuGet.
+     * Compilación en modo Release.
+     * Ejecución de suite de pruebas unitarias (`xUnit`).
+     * Publicación de reporte de cobertura y resultados de pruebas como artefactos.
+
+2. **Pipeline de Despliegue / Entrega Continua ([`cd.yml`](.github/workflows/cd.yml)):**
+   * **Disparadores:** `push` a ramas productivas (`prod`, `main`), etiquetas de versión (`v*.*.*`) o ejecución manual (`workflow_dispatch`).
+   * **Acciones:**
+     * Publicación optimizada de binarios de `Inventory.Api` y `Inventory.Web`.
+     * Generación y empaquetado de artefactos descargables listos para despliegue.
