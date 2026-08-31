@@ -29,8 +29,8 @@
               "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Application\\Inventory.Application.csproj": {
                 "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Application\\Inventory.Application.csproj"
               },
-              "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj": {
-                "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj"
+              "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj"
               }
             }
           }
@@ -216,14 +216,14 @@
         }
       }
     },
-    "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj": {
+    "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj",
         "projectName": "Inventory.Infrastructure",
-        "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj",
+        "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Mariano\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\obj\\",
+        "outputPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Mariano\\AppData\\Roaming\\NuGet\\NuGet.Config"

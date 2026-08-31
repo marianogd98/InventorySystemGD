@@ -1,7 +1,19 @@
+// Inventory.Web/Program.cs
+using Inventory.Web.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Configuración de Razor Pages
 builder.Services.AddRazorPages();
+
+// 2. Registro del Typed HttpClient para el servicio de API
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5102";
+
+builder.Services.AddHttpClient<IInventoryApiService, InventoryApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 var app = builder.Build();
 
@@ -9,7 +21,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

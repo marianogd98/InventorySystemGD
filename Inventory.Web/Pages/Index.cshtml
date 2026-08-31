@@ -1,10 +1,169 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Panel de Control de Inventario";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800 fw-bold">
+                <i class="bi bi-boxes"></i> Panel de Control de Inventario
+            </h1>
+            <p class="text-muted mb-0">Monitoreo en tiempo real del estado de existencias y valorización por categoría.</p>
+        </div>
+        <div>
+            <a href="/" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar Datos
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Valor Total Inventario</div>
+                    <div class="fs-4 fw-bold text-primary">@Model.TotalGlobalValue.ToString("C2")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Unidades Totales</div>
+                    <div class="fs-4 fw-bold text-success">@Model.TotalGlobalUnits.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Total de Productos</div>
+                    <div class="fs-4 fw-bold text-info">@Model.TotalGlobalProducts.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-danger border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Alertas de Bajo Stock</div>
+                    <div class="fs-4 fw-bold text-danger">@Model.LowStockProducts.Count()</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tables -->
+    <div class="row g-4">
+        <!-- Tabla 1: Resumen por Categoría -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-pie-chart text-primary me-2"></i>Resumen por Categoría
+                    </h5>
+                    <span class="badge bg-primary-subtle text-primary fw-semibold">Dapper Stored Procedure</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-4">Categoría</th>
+                                    <th scope="col" class="text-center">Variedad</th>
+                                    <th scope="col" class="text-center">Stock</th>
+                                    <th scope="col" class="text-end pe-4">Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.InventorySummary.Any())
+                                {
+                                    @foreach (var item in Model.InventorySummary)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-semibold text-dark">@item.Category</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border">@item.ProductCount prod.</span>
+                                            </td>
+                                            <td class="text-center fw-medium">@item.TotalUnits.ToString("N0")</td>
+                                            <td class="text-end pe-4 fw-bold text-success">
+                                                @item.TotalInventoryValue.ToString("C2")
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            No hay registros de inventario disponibles.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla 2: Alertas de Bajo Stock -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>Alertas de Bajo Stock (&le; 10)
+                    </h5>
+                    <span class="badge bg-danger-subtle text-danger fw-semibold">Dapper Query</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-4">Producto</th>
+                                    <th scope="col">Categoría</th>
+                                    <th scope="col" class="text-end">Precio</th>
+                                    <th scope="col" class="text-center">Stock</th>
+                                    <th scope="col" class="text-end pe-4">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.LowStockProducts.Any())
+                                {
+                                    @foreach (var prod in Model.LowStockProducts)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-semibold text-dark">@prod.Name</td>
+                                            <td>
+                                                <span class="badge bg-secondary-subtle text-secondary">@prod.Category</span>
+                                            </td>
+                                            <td class="text-end">@prod.Price.ToString("C2")</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger">@prod.Stock</span>
+                                            </td>
+                                            <td class="text-end pe-4 text-muted small">
+                                                @prod.CreatedAt.ToString("dd/MM/yyyy")
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="bi bi-check-circle text-success me-1"></i> No hay productos con stock crítico en este momento.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
