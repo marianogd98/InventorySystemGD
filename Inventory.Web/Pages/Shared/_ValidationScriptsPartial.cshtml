@@ -1,2 +1,25 @@
-﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    if (typeof jQuery !== 'undefined' && jQuery.validator) {
+        jQuery.extend(jQuery.validator.messages, {
+            required: "Este campo es obligatorio.",
+            remote: "Por favor, completa este campo.",
+            email: "Por favor, escribe una dirección de correo electrónico válida.",
+            url: "Por favor, escribe una URL válida.",
+            date: "Por favor, escribe una fecha válida.",
+            dateISO: "Por favor, escribe una fecha válida (ISO).",
+            number: "Por favor, introduce un número válido (no se permiten caracteres ni letras).",
+            digits: "Por favor, introduce solo dígitos enteros.",
+            creditcard: "Por favor, introduce un número de tarjeta válido.",
+            equalTo: "Por favor, introduce el mismo valor de nuevo.",
+            extension: "Por favor, introduce un valor con una extensión válida.",
+            maxlength: jQuery.validator.format("Por favor, no introduzcas más de {0} caracteres."),
+            minlength: jQuery.validator.format("Por favor, no introduzcas menos de {0} caracteres."),
+            rangelength: jQuery.validator.format("Por favor, introduce un valor entre {0} y {1} caracteres."),
+            range: jQuery.validator.format("Por favor, introduce un valor entre {0} y {1}."),
+            max: jQuery.validator.format("Por favor, introduce un valor menor o igual a {0}."),
+            min: jQuery.validator.format("Por favor, introduce un valor mayor o igual a {0} (no puede ser negativo).")
+        });
+    }
+</script>

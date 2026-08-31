@@ -463,8 +463,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
-              "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj"
+            "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
+              "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj"
             }
           }
         }

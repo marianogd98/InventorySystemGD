@@ -1,10 +1,304 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Panel de Control de Inventario";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h1 class="h3 mb-0 fw-bold">
+                <i class="bi bi-boxes text-primary"></i> Panel de Control de Inventario
+            </h1>
+            <p class="text-muted mb-0">Monitoreo en tiempo real del estado de existencias y valorización por categoría.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createProductModal">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo Producto
+            </button>
+            <a href="/" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+            </a>
+        </div>
+    </div>
+
+
+
+    <!-- KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Valor Total Inventario</div>
+                    <div class="fs-4 fw-bold text-primary">@Model.TotalGlobalValue.ToString("C2")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Unidades Totales</div>
+                    <div class="fs-4 fw-bold text-success">@Model.TotalGlobalUnits.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Total de Productos</div>
+                    <div class="fs-4 fw-bold text-info">@Model.TotalGlobalProducts.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 border-start border-danger border-4">
+                <div class="card-body">
+                    <div class="text-muted small text-uppercase fw-semibold">Alertas de Bajo Stock</div>
+                    <div class="fs-4 fw-bold text-danger">@Model.LowStockProducts.Count()</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tablas Principales -->
+    <div class="row g-4">
+        <!-- Tabla 1: Resumen por Categoría -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-pie-chart text-primary me-2"></i>Resumen por Categoría
+                    </h5>
+                    <span class="badge bg-primary-subtle text-primary fw-semibold">Dapper Stored Procedure</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-4">Categoría</th>
+                                    <th scope="col" class="text-center">Variedad</th>
+                                    <th scope="col" class="text-center">Stock</th>
+                                    <th scope="col" class="text-end pe-4">Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.InventorySummary.Any())
+                                {
+                                    @foreach (var item in Model.InventorySummary)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-semibold">@item.Category</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border">@item.ProductCount prod.</span>
+                                            </td>
+                                            <td class="text-center fw-medium">@item.TotalUnits.ToString("N0")</td>
+                                            <td class="text-end pe-4 fw-bold text-success">
+                                                @item.TotalInventoryValue.ToString("C2")
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            No hay registros de inventario disponibles.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla 2: Alertas de Bajo Stock -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>Alertas de Bajo Stock (&le; 10)
+                    </h5>
+                    <span class="badge bg-danger-subtle text-danger fw-semibold">Dapper Query</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="ps-4">Producto</th>
+                                    <th scope="col">Categoría</th>
+                                    <th scope="col" class="text-end">Precio</th>
+                                    <th scope="col" class="text-center">Stock</th>
+                                    <th scope="col" class="text-end pe-4">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.LowStockProducts.Any())
+                                {
+                                    @foreach (var prod in Model.LowStockProducts)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-semibold">@prod.Name</td>
+                                            <td>
+                                                <span class="badge bg-secondary-subtle text-secondary">@prod.Category</span>
+                                            </td>
+                                            <td class="text-end">@prod.Price.ToString("C2")</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger">@prod.Stock</span>
+                                            </td>
+                                            <td class="text-end pe-4 text-muted small">
+                                                @prod.CreatedAt.ToString("dd/MM/yyyy")
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="bi bi-check-circle text-success me-1"></i> No hay productos con stock crítico en este momento.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Modal: Crear Nuevo Producto -->
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" asp-page-handler="CreateProduct" novalidate id="createProductForm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="createProductModalLabel">
+                        <i class="bi bi-plus-circle me-1"></i> Registrar Nuevo Producto
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="NewProduct.Name" class="form-label fw-semibold">Nombre del Producto</label>
+                        <input asp-for="NewProduct.Name" 
+                               class="form-control" 
+                               placeholder="Ej. Laptop ThinkPad X1" 
+                               pattern="^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$"
+                               data-val="true"
+                               data-val-required="El nombre del producto es obligatorio."
+                               data-val-regex="El nombre contiene caracteres especiales no permitidos para prevenir inyecciones SQL."
+                               required />
+                        <span asp-validation-for="NewProduct.Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewProduct.Category" class="form-label fw-semibold">Categoría</label>
+                        <input asp-for="NewProduct.Category" 
+                               class="form-control" 
+                               placeholder="Ej. Laptops, Periféricos, etc." 
+                               pattern="^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$"
+                               data-val="true"
+                               data-val-required="La categoría es obligatoria."
+                               data-val-regex="La categoría contiene caracteres especiales no permitidos para prevenir inyecciones SQL."
+                               required />
+                        <span asp-validation-for="NewProduct.Category" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label asp-for="NewProduct.Price" class="form-label fw-semibold">Precio ($)</label>
+                            <input asp-for="NewProduct.Price" 
+                                   type="number" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   class="form-control" 
+                                   placeholder="0.00" 
+                                   data-val="true"
+                                   data-val-required="El precio es obligatorio."
+                                   data-val-number="El precio debe ser un número válido (no se permiten letras ni caracteres)."
+                                   data-val-range="El precio no puede ser negativo y debe ser mayor a 0."
+                                   required />
+                            <span asp-validation-for="NewProduct.Price" class="text-danger small"></span>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="NewProduct.Stock" class="form-label fw-semibold">Stock Inicial</label>
+                            <input asp-for="NewProduct.Stock" 
+                                   type="number" 
+                                   step="1" 
+                                   min="0" 
+                                   class="form-control" 
+                                   placeholder="0" 
+                                   data-val="true"
+                                   data-val-required="El stock inicial es obligatorio."
+                                   data-val-number="El stock debe ser un número entero válido (no se permiten letras ni caracteres)."
+                                   data-val-range="El stock no puede ser negativo (debe ser 0 o mayor)."
+                                   required />
+                            <span asp-validation-for="NewProduct.Stock" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Guardar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: '@(Model.StatusType ?? "info")',
+                    title: '@Html.Raw(Model.StatusTitle ?? "Notificación")',
+                    html: `@Html.Raw(Model.StatusMessage)`,
+                    confirmButtonColor: '#0d6efd',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        popup: 'shadow-lg rounded-4'
+                    }
+                });
+            });
+        </script>
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('createProductForm');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    if (window.jQuery && $(form).valid && !$(form).valid()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Campos Inválidos o Incompletos',
+                            html: 'Por favor, revisa las alertas en rojo en el formulario antes de guardar el producto.',
+                            confirmButtonColor: '#0d6efd',
+                            confirmButtonText: 'Entendido',
+                            customClass: {
+                                popup: 'shadow-lg rounded-4'
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+}
+

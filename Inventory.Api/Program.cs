@@ -1,44 +1,174 @@
-var builder = WebApplication.CreateBuilder(args);
+// Inventory.Api/Program.cs
+using System.Text;
+using Inventory.Application.Products.Commands.AddProduct;
+using Inventory.Domain.Interfaces;
+using Inventory.Infrastructure.Persistence;
+using Inventory.Infrastructure.Queries;
+using Inventory.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// 1. Configuración de Serilog Logger
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    Log.Information("Iniciando host de Inventory.Api...");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Integrar Serilog como proveedor de logging
+    builder.Host.UseSerilog();
+
+    // 2. Configuración de ConnectionStrings
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("La cadena de conexión 'DefaultConnection' no fue configurada.");
+
+    // 3. Persistencia con EF Core (Command Side)
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(3),
+                errorNumbersToAdd: null);
+        }));
+
+    // 4. Registro de Repositorios y Consultas (DIP & CQRS)
+    builder.Services.AddScoped<IProductRepository, ProductRepository>();
+    builder.Services.AddScoped<IInventoryQueries>(sp => new InventoryQueries(connectionString));
+
+    // 5. Configuración de MediatR (Assembly de Inventory.Application)
+    builder.Services.AddMediatR(cfg =>
+        cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly));
+
+    // 6. Configuración de Autenticación con JWT
+    var jwtKey = builder.Configuration["Jwt:SecretKey"]
+        ?? throw new InvalidOperationException("La clave secreta JWT 'Jwt:SecretKey' no fue configurada.");
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "InventoryApi";
+    var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "InventoryApp";
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+    builder.Services.AddAuthorization();
+
+    // 7. Registro de Controladores y validación en español
+    builder.Services.AddControllers()
+        .AddMvcOptions(options =>
+        {
+            var p = options.ModelBindingMessageProvider;
+            p.SetValueMustNotBeNullAccessor(name => $"El campo '{name}' es obligatorio.");
+            p.SetValueIsInvalidAccessor(value => $"El valor '{value}' no es válido.");
+            p.SetValueMustBeANumberAccessor(name => $"El campo '{name}' debe ser un valor numérico (no se permiten letras ni caracteres).");
+            p.SetMissingKeyOrValueAccessor(() => "Se requiere un valor.");
+            p.SetNonPropertyAttemptedValueIsInvalidAccessor(value => $"El valor '{value}' no es válido.");
+            p.SetNonPropertyUnknownValueIsInvalidAccessor(() => "El valor ingresado no es válido.");
+            p.SetNonPropertyValueMustBeANumberAccessor(() => "El valor debe ser un número (no se permiten caracteres).");
+            p.SetUnknownValueIsInvalidAccessor(name => $"El valor ingresado para '{name}' no es válido.");
+            p.SetAttemptedValueIsInvalidAccessor((value, name) => $"El valor '{value}' no es válido para el campo '{name}' (no se permiten letras ni caracteres).");
+            p.SetMissingBindRequiredValueAccessor(name => $"No se suministró un valor para '{name}'.");
+            p.SetMissingRequestBodyRequiredValueAccessor(() => "El cuerpo de la solicitud no puede estar vacío.");
+        });
+
+    // 8. Configuración de Swagger con soporte para Bearer Token
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Mini Inventory System API",
+            Version = "v1",
+            Description = "API de Gestión de Inventario con Clean Architecture, CQRS, EF Core y Dapper."
+        });
+
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Ingresa el token JWT en el formato: Bearer {tu_token}"
+        });
+
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+    });
+
+    var app = builder.Build();
+
+    // Middleware de logging de peticiones HTTP de Serilog
+    app.UseSerilogRequestLogging();
+
+    // Pipeline de Middleware HTTP
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mini Inventory System API v1");
+        });
+    }
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
+catch (Exception ex)
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    Log.Fatal(ex, "La aplicación Inventory.Api finalizó inesperadamente.");
+}
+finally
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.CloseAndFlush();
 }

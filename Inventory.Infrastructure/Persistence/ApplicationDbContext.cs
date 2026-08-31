@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Infrastructure.Persistence;
 
+/// <summary>
+/// Contexto de Entity Framework Core para operaciones de comando y escritura (Write Side).
+/// Configura el mapeo relacional de la entidad Product y sus restricciones de integridad.
+/// </summary>
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -21,10 +25,9 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("Products");
 
+            // Clave primaria administrada por la aplicación (Guid generado por el Factory Method)
             entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedNever();
 
             entity.Property(e => e.Name)
                 .IsRequired()

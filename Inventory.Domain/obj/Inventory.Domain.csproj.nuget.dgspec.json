@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {}
+    "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {}
   },
   "projects": {
-    "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
+    "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
         "projectName": "Inventory.Domain",
-        "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
+        "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
         "packagesPath": "C:\\Users\\Mariano\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\obj\\",
+        "outputPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Mariano\\AppData\\Roaming\\NuGet\\NuGet.Config"
