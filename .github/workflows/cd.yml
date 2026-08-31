@@ -1,0 +1,55 @@
+﻿name: CD Pipeline (Deployment & Artifacts)
+
+on:
+  push:
+    branches:
+      - prod
+      - main
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  publish-and-package:
+    name: Publish Binaries & Create Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Publish Web API (Release)
+        run: >
+          dotnet publish Inventory.Api/Inventory.Api.csproj
+          --configuration Release
+          --no-restore
+          --output ./publish/api
+
+      - name: Publish Web Frontend (Release)
+        run: >
+          dotnet publish Inventory.Web/Inventory.Web.csproj
+          --configuration Release
+          --no-restore
+          --output ./publish/web
+
+      - name: Upload Web API Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-api-release
+          path: ./publish/api
+          retention-days: 14
+
+      - name: Upload Web Client Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-web-release
+          path: ./publish/web
+          retention-days: 14
