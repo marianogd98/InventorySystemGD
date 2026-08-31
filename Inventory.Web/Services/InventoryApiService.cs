@@ -1,8 +1,10 @@
 // Inventory.Web/Services/InventoryApiService.cs
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
 using Inventory.Domain.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace Inventory.Web.Services;
 
@@ -28,7 +30,7 @@ public record ProductDto(
 /// </summary>
 public interface IInventoryApiService
 {
-    Task<bool> AuthenticateAsync(string username = "admin", string password = "admin123");
+    Task<(bool Success, string? Token, string? ErrorMessage)> LoginAsync(string username, string password);
     Task<IEnumerable<CategoryInventoryValue>> GetInventoryValueByCategoryAsync();
     Task<IEnumerable<ProductDto>> GetLowStockProductsAsync(int threshold = 10);
     Task<(bool Success, string? ErrorMessage)> CreateProductAsync(string name, string category, decimal price, int stock);
@@ -36,21 +38,45 @@ public interface IInventoryApiService
 
 /// <summary>
 /// Implementación del servicio cliente usando Typed HttpClient.
-/// Administra la autenticación JWT automática y reintentos ante respuestas 401 Unauthorized.
+/// Administra la autenticación JWT automática y reenvía el token de la sesión activa del usuario.
 /// </summary>
 public class InventoryApiService : IInventoryApiService
 {
     private readonly HttpClient _httpClient;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<InventoryApiService> _logger;
-    private string? _jwtToken;
+    private string? _cachedToken;
 
-    public InventoryApiService(HttpClient httpClient, ILogger<InventoryApiService> logger)
+    public InventoryApiService(
+        HttpClient httpClient,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<InventoryApiService> logger)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<bool> AuthenticateAsync(string username = "admin", string password = "admin123")
+    /// <summary>
+    /// Obtiene el token JWT del contexto de sesión del usuario actual o de la caché interna.
+    /// </summary>
+    private string? GetCurrentJwtToken()
+    {
+        // 1. Intentar obtener el token de los claims del usuario autenticado en la cookie
+        var claimToken = _httpContextAccessor.HttpContext?.User?.FindFirst("JwtToken")?.Value;
+        if (!string.IsNullOrWhiteSpace(claimToken))
+        {
+            return claimToken;
+        }
+
+        // 2. Si no está en claims, usar el token en memoria
+        return _cachedToken;
+    }
+
+    /// <summary>
+    /// Autentica un usuario contra el endpoint /api/auth/login y devuelve el token JWT emitido.
+    /// </summary>
+    public async Task<(bool Success, string? Token, string? ErrorMessage)> LoginAsync(string username, string password)
     {
         try
         {
@@ -61,7 +87,7 @@ public class InventoryApiService : IInventoryApiService
             {
                 var body = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning("Error al autenticar con la API. Status: {StatusCode}, Body: {Body}", response.StatusCode, body);
-                return false;
+                return (false, null, "Credenciales incorrectas o servidor no disponible.");
             }
 
             var authResult = await response.Content.ReadFromJsonAsync<AuthResponse>(new JsonSerializerOptions
@@ -71,32 +97,35 @@ public class InventoryApiService : IInventoryApiService
 
             if (authResult is not null && !string.IsNullOrWhiteSpace(authResult.Token))
             {
-                _jwtToken = authResult.Token;
-                return true;
+                _cachedToken = authResult.Token;
+                return (true, authResult.Token, null);
             }
 
-            return false;
+            return (false, null, "La respuesta de la API no contiene un token válido.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Excepción durante la autenticación con la API.");
-            return false;
+            return (false, null, $"Error al conectar con la API: {ex.Message}");
         }
     }
 
-    private async Task EnsureAuthenticatedAsync()
+    private async Task<string?> EnsureTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(_jwtToken))
+        var token = GetCurrentJwtToken();
+        if (string.IsNullOrWhiteSpace(token))
         {
-            await AuthenticateAsync();
+            var (_, fallbackToken, _) = await LoginAsync("admin", "admin123");
+            token = fallbackToken;
         }
+        return token;
     }
 
     public async Task<(bool Success, string? ErrorMessage)> CreateProductAsync(string name, string category, decimal price, int stock)
     {
         try
         {
-            await EnsureAuthenticatedAsync();
+            var token = await EnsureTokenAsync();
 
             var payload = new { Name = name, Category = category, Price = price, Stock = stock };
 
@@ -105,25 +134,23 @@ public class InventoryApiService : IInventoryApiService
                 Content = JsonContent.Create(payload)
             };
 
-            if (!string.IsNullOrWhiteSpace(_jwtToken))
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
             var response = await _httpClient.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                if (await AuthenticateAsync())
+                var (_, newToken, _) = await LoginAsync("admin", "admin123");
+                if (!string.IsNullOrWhiteSpace(newToken))
                 {
                     using var retryRequest = new HttpRequestMessage(HttpMethod.Post, "/api/products")
                     {
                         Content = JsonContent.Create(payload)
                     };
-                    if (!string.IsNullOrWhiteSpace(_jwtToken))
-                    {
-                        retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
-                    }
+                    retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
                     response = await _httpClient.SendAsync(retryRequest);
                 }
             }
@@ -148,25 +175,23 @@ public class InventoryApiService : IInventoryApiService
     {
         try
         {
-            await EnsureAuthenticatedAsync();
+            var token = await EnsureTokenAsync();
 
             using var request = new HttpRequestMessage(HttpMethod.Get, "/api/products/inventory-value-by-category");
-            if (!string.IsNullOrWhiteSpace(_jwtToken))
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
             var response = await _httpClient.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                if (await AuthenticateAsync())
+                var (_, newToken, _) = await LoginAsync("admin", "admin123");
+                if (!string.IsNullOrWhiteSpace(newToken))
                 {
                     using var retryRequest = new HttpRequestMessage(HttpMethod.Get, "/api/products/inventory-value-by-category");
-                    if (!string.IsNullOrWhiteSpace(_jwtToken))
-                    {
-                        retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
-                    }
+                    retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
                     response = await _httpClient.SendAsync(retryRequest);
                 }
             }
@@ -195,25 +220,23 @@ public class InventoryApiService : IInventoryApiService
     {
         try
         {
-            await EnsureAuthenticatedAsync();
+            var token = await EnsureTokenAsync();
 
             using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/products/low-stock?threshold={threshold}");
-            if (!string.IsNullOrWhiteSpace(_jwtToken))
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
             var response = await _httpClient.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                if (await AuthenticateAsync())
+                var (_, newToken, _) = await LoginAsync("admin", "admin123");
+                if (!string.IsNullOrWhiteSpace(newToken))
                 {
                     using var retryRequest = new HttpRequestMessage(HttpMethod.Get, $"/api/products/low-stock?threshold={threshold}");
-                    if (!string.IsNullOrWhiteSpace(_jwtToken))
-                    {
-                        retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
-                    }
+                    retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
                     response = await _httpClient.SendAsync(retryRequest);
                 }
             }

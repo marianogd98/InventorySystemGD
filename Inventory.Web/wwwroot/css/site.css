@@ -131,3 +131,33 @@ body {
 [data-bs-theme="dark"] .swal2-close {
   color: #94a3b8 !important;
 }
+
+/* =========================================================
+   LOGIN PAGE CUSTOM STYLES
+   ========================================================= */
+
+.min-vh-75 {
+  min-height: 75vh;
+}
+
+.avatar-circle {
+  width: 68px;
+  height: 68px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-bs-theme="dark"] .avatar-circle {
+  background-color: #1f2330;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0052cc 100%);
+}
+
+.letter-spacing-1 {
+  letter-spacing: 0.05rem;
+}

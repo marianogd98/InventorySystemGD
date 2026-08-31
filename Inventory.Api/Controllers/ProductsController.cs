@@ -58,6 +58,11 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetLowStockProducts([FromQuery] int threshold = 10)
     {
+        if (threshold < 0)
+        {
+            return BadRequest(new { error = "El umbral de existencias críticas no puede ser un número negativo." });
+        }
+
         var query = new GetLowStockProductsQuery(threshold);
         var products = await _mediator.Send(query);
         return Ok(products);
