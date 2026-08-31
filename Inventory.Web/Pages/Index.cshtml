@@ -70,17 +70,68 @@
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-pie-chart text-primary me-2"></i>Resumen por Categoría
                     </h5>
-                    <span class="badge bg-primary-subtle text-primary fw-semibold">Dapper Stored Procedure</span>
                 </div>
                 <div class="card-body p-0 flex-grow-1">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="table-light user-select-none">
                                 <tr>
-                                    <th scope="col" class="ps-4">Categoría</th>
-                                    <th scope="col" class="text-center">Variedad</th>
-                                    <th scope="col" class="text-center">Stock</th>
-                                    <th scope="col" class="text-end pe-4">Valor Total</th>
+                                    <th scope="col" class="ps-4">
+                                        <a href="?catSort=Category&catDir=@Model.GetCatNextDir("Category")&catPage=@Model.CatPage&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1" title="Ordenar por Categoría">
+                                            Categoría
+                                            @if (string.Equals(Model.CatSort, "Category", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.CatDir == "desc" ? "bi-sort-alpha-down-alt text-primary" : "bi-sort-alpha-down text-primary")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <a href="?catSort=ProductCount&catDir=@Model.GetCatNextDir("ProductCount")&catPage=@Model.CatPage&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1 justify-content-center" title="Ordenar por Variedad">
+                                            Variedad
+                                            @if (string.Equals(Model.CatSort, "ProductCount", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.CatDir == "desc" ? "bi-sort-numeric-down-alt text-primary" : "bi-sort-numeric-down text-primary")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <a href="?catSort=TotalUnits&catDir=@Model.GetCatNextDir("TotalUnits")&catPage=@Model.CatPage&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1 justify-content-center" title="Ordenar por Stock">
+                                            Stock
+                                            @if (string.Equals(Model.CatSort, "TotalUnits", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.CatDir == "desc" ? "bi-sort-numeric-down-alt text-primary" : "bi-sort-numeric-down text-primary")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-end pe-4">
+                                        <a href="?catSort=TotalInventoryValue&catDir=@Model.GetCatNextDir("TotalInventoryValue")&catPage=@Model.CatPage&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1 justify-content-end" title="Ordenar por Valor Total">
+                                            Valor Total
+                                            @if (string.Equals(Model.CatSort, "TotalInventoryValue", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.CatDir == "desc" ? "bi-sort-numeric-down-alt text-primary" : "bi-sort-numeric-down text-primary")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -104,7 +155,7 @@
                                 {
                                     <tr>
                                         <td colspan="4" class="text-center py-4 text-muted">
-                                            No hay registros de inventario disponibles.
+                                            <i class="bi bi-info-circle me-1"></i> No se encontraron categorías que coincidan con los filtros.
                                         </td>
                                     </tr>
                                 }
@@ -112,33 +163,69 @@
                         </table>
                     </div>
                 </div>
-                <!-- Paginación de Resumen por Categoría -->
-                @if (Model.CatTotalItems > 0)
-                {
-                    var catStart = (Model.CatPage - 1) * IndexModel.PageSize + 1;
-                    var catEnd = Math.Min(Model.CatPage * IndexModel.PageSize, Model.CatTotalItems);
+                <!-- Barra Inferior: Buscador en margen izquierdo y Paginación completa (Mostrando + Botones) en margen derecho -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-2 border-top bg-body-tertiary rounded-bottom-3">
+                    <!-- Margen Izquierdo: Únicamente el Buscador Global -->
+                    <div>
+                        <form method="get" class="d-flex align-items-center m-0">
+                            <input type="hidden" name="catSort" value="@Model.CatSort" />
+                            <input type="hidden" name="catDir" value="@Model.CatDir" />
+                            <input type="hidden" name="catPage" value="1" />
+                            <input type="hidden" name="stockSort" value="@Model.StockSort" />
+                            <input type="hidden" name="stockDir" value="@Model.StockDir" />
+                            <input type="hidden" name="stockPage" value="@Model.StockPage" />
+                            <input type="hidden" name="stockSearch" value="@Model.StockSearch" />
+                            <input type="hidden" name="threshold" value="@Model.Threshold" />
+                            <div class="input-group input-group-sm" style="width: 220px;">
+                                <span class="input-group-text bg-body-tertiary border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" 
+                                       name="catSearch" 
+                                       value="@Model.CatSearch" 
+                                       class="form-control border-start-0 ps-0" 
+                                       placeholder="Buscar categoría o stock..." 
+                                       title="Buscar por categoría, stock o variedad" />
+                                @if (!string.IsNullOrWhiteSpace(Model.CatSearch))
+                                {
+                                    <a href="?catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=1&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" 
+                                       class="btn btn-outline-secondary btn-sm" title="Limpiar búsqueda">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                }
+                                <button type="submit" class="btn btn-primary btn-sm" title="Buscar">
+                                    <i class="bi bi-arrow-right-short"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-4 py-2 border-top bg-body-tertiary rounded-bottom-3">
-                        <span class="small text-muted">
-                            Mostrando <strong>@catStart</strong> - <strong>@catEnd</strong> de <strong>@Model.CatTotalItems</strong> categorías
-                        </span>
+                    <!-- Margen Derecho: Información de Paginación ("Mostrando X - Y de Z") y Botones -->
+                    <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                        @if (Model.CatTotalItems > 0)
+                        {
+                            var catStart = (Model.CatPage - 1) * IndexModel.PageSize + 1;
+                            var catEnd = Math.Min(Model.CatPage * IndexModel.PageSize, Model.CatTotalItems);
+                            <span class="small text-muted text-nowrap">
+                                Mostrando <strong>@catStart</strong> - <strong>@catEnd</strong> de <strong>@Model.CatTotalItems</strong> categorías
+                            </span>
+                        }
+
                         @if (Model.CatTotalPages > 1)
                         {
                             <nav aria-label="Paginación de categorías">
                                 <ul class="pagination pagination-sm mb-0">
                                     <li class="page-item @(Model.CatPage <= 1 ? "disabled" : "")">
-                                        <a class="page-link" href="?catPage=@(Model.CatPage - 1)&stockPage=@Model.StockPage&threshold=@Model.Threshold" aria-label="Anterior">
+                                        <a class="page-link" href="?catPage=@(Model.CatPage - 1)&catSort=@Model.CatSort&catDir=@Model.CatDir&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" aria-label="Anterior">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
                                     @for (int i = 1; i <= Model.CatTotalPages; i++)
                                     {
                                         <li class="page-item @(Model.CatPage == i ? "active" : "")">
-                                            <a class="page-link" href="?catPage=@i&stockPage=@Model.StockPage&threshold=@Model.Threshold">@i</a>
+                                            <a class="page-link" href="?catPage=@i&catSort=@Model.CatSort&catDir=@Model.CatDir&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold">@i</a>
                                         </li>
                                     }
                                     <li class="page-item @(Model.CatPage >= Model.CatTotalPages ? "disabled" : "")">
-                                        <a class="page-link" href="?catPage=@(Model.CatPage + 1)&stockPage=@Model.StockPage&threshold=@Model.Threshold" aria-label="Siguiente">
+                                        <a class="page-link" href="?catPage=@(Model.CatPage + 1)&catSort=@Model.CatSort&catDir=@Model.CatDir&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&threshold=@Model.Threshold" aria-label="Siguiente">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
@@ -146,7 +233,7 @@
                             </nav>
                         }
                     </div>
-                }
+                </div>
             </div>
         </div>
 
@@ -160,11 +247,19 @@
                             Alertas de Bajo Stock (&le; @Model.Threshold)
                         </h5>
                     </div>
-                    <!-- Formulario interactivo para modificar el umbral de bajo stock -->
-                    <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+                    <!-- Formulario con Modificador de Umbral para Bajo Stock -->
+                    <form method="get" class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                         <input type="hidden" name="catPage" value="@Model.CatPage" />
+                        <input type="hidden" name="catSort" value="@Model.CatSort" />
+                        <input type="hidden" name="catDir" value="@Model.CatDir" />
+                        <input type="hidden" name="catSearch" value="@Model.CatSearch" />
+                        <input type="hidden" name="stockSort" value="@Model.StockSort" />
+                        <input type="hidden" name="stockDir" value="@Model.StockDir" />
+                        <input type="hidden" name="stockSearch" value="@Model.StockSearch" />
                         <input type="hidden" name="stockPage" value="1" />
-                        <div class="input-group input-group-sm" style="width: 165px;">
+
+                        <!-- Modificador de Umbral de Bajo Stock -->
+                        <div class="input-group input-group-sm" style="width: 145px;">
                             <span class="input-group-text bg-body-tertiary border-end-0 small text-muted">&le;</span>
                             <input type="number" 
                                    name="threshold" 
@@ -180,27 +275,93 @@
                                    onkeydown="if(['-', '+', 'e', 'E', '.', ','].includes(event.key)) event.preventDefault();"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value !== '' && parseInt(this.value, 10) < 0) this.value = '0';"
                                    onpaste="let pasteData = (event.clipboardData || window.clipboardData).getData('text'); if(!/^\d+$/.test(pasteData)) event.preventDefault();" />
-                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Aplicar nuevo umbral">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Aplicar umbral">
                                 <i class="bi bi-funnel-fill"></i>
                             </button>
                         </div>
+                        
                         <div class="btn-group btn-group-sm" role="group" aria-label="Accesos directos de umbral">
-                            <a href="?threshold=5&catPage=@Model.CatPage&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 5 ? "active" : "")">5</a>
-                            <a href="?threshold=10&catPage=@Model.CatPage&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 10 ? "active" : "")">10</a>
-                            <a href="?threshold=20&catPage=@Model.CatPage&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 20 ? "active" : "")">20</a>
+                            <a href="?threshold=5&stockSearch=@Model.StockSearch&catPage=@Model.CatPage&catSort=@Model.CatSort&catDir=@Model.CatDir&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 5 ? "active" : "")">5</a>
+                            <a href="?threshold=10&stockSearch=@Model.StockSearch&catPage=@Model.CatPage&catSort=@Model.CatSort&catDir=@Model.CatDir&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 10 ? "active" : "")">10</a>
+                            <a href="?threshold=20&stockSearch=@Model.StockSearch&catPage=@Model.CatPage&catSort=@Model.CatSort&catDir=@Model.CatDir&catSearch=@Model.CatSearch&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 20 ? "active" : "")">20</a>
                         </div>
                     </form>
                 </div>
                 <div class="card-body p-0 flex-grow-1">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="table-light user-select-none">
                                 <tr>
-                                    <th scope="col" class="ps-4">Producto</th>
-                                    <th scope="col">Categoría</th>
-                                    <th scope="col" class="text-end">Precio</th>
-                                    <th scope="col" class="text-center">Stock</th>
-                                    <th scope="col" class="text-end pe-4">Fecha</th>
+                                    <th scope="col" class="ps-4">
+                                        <a href="?stockSort=Name&stockDir=@Model.GetStockNextDir("Name")&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1" title="Ordenar por Nombre">
+                                            Producto
+                                            @if (string.Equals(Model.StockSort, "Name", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.StockDir == "desc" ? "bi-sort-alpha-down-alt text-danger" : "bi-sort-alpha-down text-danger")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        <a href="?stockSort=Category&stockDir=@Model.GetStockNextDir("Category")&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1" title="Ordenar por Categoría">
+                                            Categoría
+                                            @if (string.Equals(Model.StockSort, "Category", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.StockDir == "desc" ? "bi-sort-alpha-down-alt text-danger" : "bi-sort-alpha-down text-danger")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-end">
+                                        <a href="?stockSort=Price&stockDir=@Model.GetStockNextDir("Price")&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1 justify-content-end" title="Ordenar por Precio">
+                                            Precio
+                                            @if (string.Equals(Model.StockSort, "Price", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.StockDir == "desc" ? "bi-sort-numeric-down-alt text-danger" : "bi-sort-numeric-down text-danger")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-center">
+                                        <a href="?stockSort=Stock&stockDir=@Model.GetStockNextDir("Stock")&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1 justify-content-center" title="Ordenar por Stock">
+                                            Stock
+                                            @if (string.Equals(Model.StockSort, "Stock", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.StockDir == "desc" ? "bi-sort-numeric-down-alt text-danger" : "bi-sort-numeric-down text-danger")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="text-end pe-4">
+                                        <a href="?stockSort=CreatedAt&stockDir=@Model.GetStockNextDir("CreatedAt")&stockPage=@Model.StockPage&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" 
+                                           class="text-decoration-none text-body d-inline-flex align-items-center gap-1 justify-content-end" title="Ordenar por Fecha de Creación">
+                                            Fecha
+                                            @if (string.Equals(Model.StockSort, "CreatedAt", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <i class="bi @(Model.StockDir == "desc" ? "bi-sort-numeric-down-alt text-danger" : "bi-sort-numeric-down text-danger")"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-arrow-down-up text-muted opacity-50 small"></i>
+                                            }
+                                        </a>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -227,7 +388,7 @@
                                 {
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="bi bi-check-circle text-success me-1"></i> No hay productos con existencias &le; @Model.Threshold.
+                                            <i class="bi bi-info-circle text-muted me-1"></i> No se encontraron productos con existencias &le; @Model.Threshold que coincidan con los filtros.
                                         </td>
                                     </tr>
                                 }
@@ -235,33 +396,70 @@
                         </table>
                     </div>
                 </div>
-                <!-- Paginación de Alertas de Bajo Stock -->
-                @if (Model.StockTotalItems > 0)
-                {
-                    var stockStart = (Model.StockPage - 1) * IndexModel.PageSize + 1;
-                    var stockEnd = Math.Min(Model.StockPage * IndexModel.PageSize, Model.StockTotalItems);
+                <!-- Barra Inferior: Buscador en margen izquierdo y Paginación completa (Mostrando + Botones) en margen derecho -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-2 border-top bg-body-tertiary rounded-bottom-3">
+                    <!-- Margen Izquierdo: Únicamente el Buscador Global de Bajo Stock -->
+                    <div>
+                        <form method="get" class="d-flex align-items-center m-0">
+                            <input type="hidden" name="catPage" value="@Model.CatPage" />
+                            <input type="hidden" name="catSort" value="@Model.CatSort" />
+                            <input type="hidden" name="catDir" value="@Model.CatDir" />
+                            <input type="hidden" name="catSearch" value="@Model.CatSearch" />
+                            <input type="hidden" name="stockSort" value="@Model.StockSort" />
+                            <input type="hidden" name="stockDir" value="@Model.StockDir" />
+                            <input type="hidden" name="stockPage" value="1" />
+                            <input type="hidden" name="threshold" value="@Model.Threshold" />
 
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-4 py-2 border-top bg-body-tertiary rounded-bottom-3">
-                        <span class="small text-muted">
-                            Mostrando <strong>@stockStart</strong> - <strong>@stockEnd</strong> de <strong>@Model.StockTotalItems</strong> productos
-                        </span>
+                            <div class="input-group input-group-sm" style="width: 220px;">
+                                <span class="input-group-text bg-body-tertiary border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" 
+                                       name="stockSearch" 
+                                       value="@Model.StockSearch" 
+                                       class="form-control border-start-0 ps-0" 
+                                       placeholder="Buscar producto..." 
+                                       title="Buscar por nombre de producto, categoría, precio o stock" />
+                                @if (!string.IsNullOrWhiteSpace(Model.StockSearch))
+                                {
+                                    <a href="?threshold=@Model.Threshold&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockPage=1&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch" 
+                                       class="btn btn-outline-secondary btn-sm" title="Limpiar búsqueda">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                }
+                                <button type="submit" class="btn btn-danger btn-sm" title="Buscar">
+                                    <i class="bi bi-arrow-right-short"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Margen Derecho: Información de Paginación ("Mostrando X - Y de Z") y Botones -->
+                    <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                        @if (Model.StockTotalItems > 0)
+                        {
+                            var stockStart = (Model.StockPage - 1) * IndexModel.PageSize + 1;
+                            var stockEnd = Math.Min(Model.StockPage * IndexModel.PageSize, Model.StockTotalItems);
+                            <span class="small text-muted text-nowrap">
+                                Mostrando <strong>@stockStart</strong> - <strong>@stockEnd</strong> de <strong>@Model.StockTotalItems</strong> productos
+                            </span>
+                        }
+
                         @if (Model.StockTotalPages > 1)
                         {
                             <nav aria-label="Paginación de bajo stock">
                                 <ul class="pagination pagination-sm mb-0">
                                     <li class="page-item @(Model.StockPage <= 1 ? "disabled" : "")">
-                                        <a class="page-link" href="?stockPage=@(Model.StockPage - 1)&catPage=@Model.CatPage&threshold=@Model.Threshold" aria-label="Anterior">
+                                        <a class="page-link" href="?stockPage=@(Model.StockPage - 1)&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" aria-label="Anterior">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
                                     @for (int i = 1; i <= Model.StockTotalPages; i++)
                                     {
                                         <li class="page-item @(Model.StockPage == i ? "active" : "")">
-                                            <a class="page-link" href="?stockPage=@i&catPage=@Model.CatPage&threshold=@Model.Threshold">@i</a>
+                                            <a class="page-link" href="?stockPage=@i&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold">@i</a>
                                         </li>
                                     }
                                     <li class="page-item @(Model.StockPage >= Model.StockTotalPages ? "disabled" : "")">
-                                        <a class="page-link" href="?stockPage=@(Model.StockPage + 1)&catPage=@Model.CatPage&threshold=@Model.Threshold" aria-label="Siguiente">
+                                        <a class="page-link" href="?stockPage=@(Model.StockPage + 1)&stockSort=@Model.StockSort&stockDir=@Model.StockDir&stockSearch=@Model.StockSearch&catSort=@Model.CatSort&catDir=@Model.CatDir&catPage=@Model.CatPage&catSearch=@Model.CatSearch&threshold=@Model.Threshold" aria-label="Siguiente">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
@@ -269,7 +467,7 @@
                             </nav>
                         }
                     </div>
-                }
+                </div>
             </div>
         </div>
     </div>

@@ -39,6 +39,26 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public int StockPage { get; set; } = 1;
 
+    // Parámetros de ordenamiento (ASC / DESC) para ambas tablas
+    [BindProperty(SupportsGet = true)]
+    public string CatSort { get; set; } = "Category";
+
+    [BindProperty(SupportsGet = true)]
+    public string CatDir { get; set; } = "asc";
+
+    [BindProperty(SupportsGet = true)]
+    public string StockSort { get; set; } = "Stock";
+
+    [BindProperty(SupportsGet = true)]
+    public string StockDir { get; set; } = "asc";
+
+    // Parámetros de búsqueda global para cada tabla
+    [BindProperty(SupportsGet = true)]
+    public string? CatSearch { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? StockSearch { get; set; }
+
     public const int PageSize = 10;
 
     // Propiedades TempData para persistir el estado de alertas y disparar SweetAlert2 tras redirecciones
@@ -59,17 +79,99 @@ public class IndexModel : PageModel
     public int TotalGlobalUnits => InventorySummary.Sum(x => x.TotalUnits);
     public int TotalGlobalProducts => InventorySummary.Sum(x => x.ProductCount);
 
-    // Cálculos de Paginación para Resumen por Categoría
-    public int CatTotalItems => InventorySummary.Count();
-    public int CatTotalPages => Math.Max(1, (int)Math.Ceiling((double)CatTotalItems / PageSize));
-    public IEnumerable<CategoryInventoryValue> PagedCategorySummary =>
-        InventorySummary.Skip((Math.Max(1, CatPage) - 1) * PageSize).Take(PageSize);
+    // Filtrado, Ordenamiento y Paginación para Resumen por Categoría
+    public IEnumerable<CategoryInventoryValue> FilteredCategorySummary
+    {
+        get
+        {
+            var items = InventorySummary;
+            if (!string.IsNullOrWhiteSpace(CatSearch))
+            {
+                var term = CatSearch.Trim();
+                items = items.Where(x =>
+                    x.Category.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.TotalUnits.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.ProductCount.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+            return items;
+        }
+    }
 
-    // Cálculos de Paginación para Alertas de Bajo Stock
-    public int StockTotalItems => LowStockProducts.Count();
+    public int CatTotalItems => FilteredCategorySummary.Count();
+    public int CatTotalPages => Math.Max(1, (int)Math.Ceiling((double)CatTotalItems / PageSize));
+
+    public IEnumerable<CategoryInventoryValue> SortedCategorySummary =>
+        (CatSort?.ToLower(), CatDir?.ToLower()) switch
+        {
+            ("category", "desc") => FilteredCategorySummary.OrderByDescending(x => x.Category),
+            ("category", _) => FilteredCategorySummary.OrderBy(x => x.Category),
+            ("productcount", "desc") => FilteredCategorySummary.OrderByDescending(x => x.ProductCount),
+            ("productcount", _) => FilteredCategorySummary.OrderBy(x => x.ProductCount),
+            ("totalunits", "desc") => FilteredCategorySummary.OrderByDescending(x => x.TotalUnits),
+            ("totalunits", _) => FilteredCategorySummary.OrderBy(x => x.TotalUnits),
+            ("totalinventoryvalue", "desc") => FilteredCategorySummary.OrderByDescending(x => x.TotalInventoryValue),
+            ("totalinventoryvalue", _) => FilteredCategorySummary.OrderBy(x => x.TotalInventoryValue),
+            _ => FilteredCategorySummary.OrderBy(x => x.Category)
+        };
+
+    public IEnumerable<CategoryInventoryValue> PagedCategorySummary =>
+        SortedCategorySummary.Skip((Math.Max(1, CatPage) - 1) * PageSize).Take(PageSize);
+
+    // Filtrado, Ordenamiento y Paginación para Alertas de Bajo Stock
+    public IEnumerable<ProductDto> FilteredLowStockProducts
+    {
+        get
+        {
+            var items = LowStockProducts;
+            if (!string.IsNullOrWhiteSpace(StockSearch))
+            {
+                var term = StockSearch.Trim();
+                items = items.Where(x =>
+                    x.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.Category.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.Stock.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.Price.ToString().Contains(term, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+            return items;
+        }
+    }
+
+    public int StockTotalItems => FilteredLowStockProducts.Count();
     public int StockTotalPages => Math.Max(1, (int)Math.Ceiling((double)StockTotalItems / PageSize));
+
+    public IEnumerable<ProductDto> SortedLowStockProducts =>
+        (StockSort?.ToLower(), StockDir?.ToLower()) switch
+        {
+            ("name", "desc") => FilteredLowStockProducts.OrderByDescending(x => x.Name),
+            ("name", _) => FilteredLowStockProducts.OrderBy(x => x.Name),
+            ("category", "desc") => FilteredLowStockProducts.OrderByDescending(x => x.Category),
+            ("category", _) => FilteredLowStockProducts.OrderBy(x => x.Category),
+            ("price", "desc") => FilteredLowStockProducts.OrderByDescending(x => x.Price),
+            ("price", _) => FilteredLowStockProducts.OrderBy(x => x.Price),
+            ("stock", "desc") => FilteredLowStockProducts.OrderByDescending(x => x.Stock),
+            ("stock", _) => FilteredLowStockProducts.OrderBy(x => x.Stock),
+            ("createdat", "desc") => FilteredLowStockProducts.OrderByDescending(x => x.CreatedAt),
+            ("createdat", _) => FilteredLowStockProducts.OrderBy(x => x.CreatedAt),
+            _ => FilteredLowStockProducts.OrderBy(x => x.Stock)
+        };
+
     public IEnumerable<ProductDto> PagedLowStockProducts =>
-        LowStockProducts.Skip((Math.Max(1, StockPage) - 1) * PageSize).Take(PageSize);
+        SortedLowStockProducts.Skip((Math.Max(1, StockPage) - 1) * PageSize).Take(PageSize);
+
+    /// <summary>
+    /// Retorna la siguiente dirección de ordenamiento ('asc' o 'desc') al hacer clic en una columna.
+    /// </summary>
+    public string GetCatNextDir(string column) =>
+        string.Equals(CatSort, column, StringComparison.OrdinalIgnoreCase) && string.Equals(CatDir, "asc", StringComparison.OrdinalIgnoreCase)
+            ? "desc"
+            : "asc";
+
+    public string GetStockNextDir(string column) =>
+        string.Equals(StockSort, column, StringComparison.OrdinalIgnoreCase) && string.Equals(StockDir, "asc", StringComparison.OrdinalIgnoreCase)
+            ? "desc"
+            : "asc";
 
     /// <summary>
     /// Carga en paralelo las consultas de valorización y bajo stock con el umbral especificado.
@@ -145,7 +247,17 @@ public class IndexModel : PageModel
             StatusType = "error";
         }
 
-        return RedirectToPage(new { threshold = Threshold, catPage = CatPage, stockPage = StockPage });
+        return RedirectToPage(new { 
+            threshold = Threshold, 
+            catPage = CatPage, 
+            stockPage = StockPage,
+            catSort = CatSort,
+            catDir = CatDir,
+            stockSort = StockSort,
+            stockDir = StockDir,
+            catSearch = CatSearch,
+            stockSearch = StockSearch
+        });
     }
 }
 
