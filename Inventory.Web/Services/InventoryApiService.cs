@@ -22,6 +22,7 @@ public interface IInventoryApiService
     Task<bool> AuthenticateAsync(string username = "admin", string password = "admin123");
     Task<IEnumerable<CategoryInventoryValue>> GetInventoryValueByCategoryAsync();
     Task<IEnumerable<ProductDto>> GetLowStockProductsAsync(int threshold = 10);
+    Task<bool> CreateProductAsync(string name, string category, decimal price, int stock);
 }
 
 public class InventoryApiService : IInventoryApiService
@@ -76,6 +77,32 @@ public class InventoryApiService : IInventoryApiService
         if (string.IsNullOrWhiteSpace(_jwtToken))
         {
             await AuthenticateAsync();
+        }
+    }
+
+    public async Task<bool> CreateProductAsync(string name, string category, decimal price, int stock)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var payload = new { Name = name, Category = category, Price = price, Stock = stock };
+            var response = await _httpClient.PostAsJsonAsync("/api/products", payload);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                if (await AuthenticateAsync())
+                {
+                    response = await _httpClient.PostAsJsonAsync("/api/products", payload);
+                }
+            }
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Excepción al crear producto desde el cliente web.");
+            return false;
         }
     }
 
@@ -153,4 +180,3 @@ public class InventoryApiService : IInventoryApiService
         }
     }
 }
-

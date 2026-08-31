@@ -6,19 +6,32 @@
 
 <div class="container-fluid py-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
                 <i class="bi bi-boxes"></i> Panel de Control de Inventario
             </h1>
             <p class="text-muted mb-0">Monitoreo en tiempo real del estado de existencias y valorización por categoría.</p>
         </div>
-        <div>
-            <a href="/" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-arrow-clockwise"></i> Actualizar Datos
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createProductModal">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo Producto
+            </button>
+            <a href="/" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
             </a>
         </div>
     </div>
+
+    <!-- Alert Notifications -->
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <div class="alert alert-@Model.StatusType alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi @(Model.StatusType == "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></i>
+            @Model.StatusMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     <!-- KPI Summary Cards -->
     <div class="row g-3 mb-4">
@@ -56,7 +69,7 @@
         </div>
     </div>
 
-    <!-- Main Content Tables -->
+    <!-- Tablas Principales -->
     <div class="row g-4">
         <!-- Tabla 1: Resumen por Categoría -->
         <div class="col-12 col-lg-6">
@@ -167,3 +180,56 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Crear Nuevo Producto -->
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" asp-page-handler="CreateProduct">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="createProductModalLabel">
+                        <i class="bi bi-plus-circle me-1"></i> Registrar Nuevo Producto
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="NewProduct.Name" class="form-label fw-semibold">Nombre del Producto</label>
+                        <input asp-for="NewProduct.Name" class="form-control" placeholder="Ej. Laptop ThinkPad X1" required />
+                        <span asp-validation-for="NewProduct.Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewProduct.Category" class="form-label fw-semibold">Categoría</label>
+                        <input asp-for="NewProduct.Category" class="form-control" placeholder="Ej. Laptops, Periféricos, etc." required />
+                        <span asp-validation-for="NewProduct.Category" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label asp-for="NewProduct.Price" class="form-label fw-semibold">Precio ($)</label>
+                            <input asp-for="NewProduct.Price" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" required />
+                            <span asp-validation-for="NewProduct.Price" class="text-danger small"></span>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="NewProduct.Stock" class="form-label fw-semibold">Stock Inicial</label>
+                            <input asp-for="NewProduct.Stock" type="number" min="0" class="form-control" placeholder="0" required />
+                            <span asp-validation-for="NewProduct.Stock" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Guardar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
