@@ -114,10 +114,100 @@ dotnet test
 
 ---
 
+## 🖥️ Guía de Operaciones: Interfaz Web vs API REST
+
+El sistema permite ejecutar todas las operaciones tanto desde la interfaz gráfica de usuario como directamente desde la API REST o herramientas como Swagger / Postman:
+
+| Operación | Desde la Interfaz Web (`Inventory.Web`) | Directamente desde la API REST (`Inventory.Api`) |
+| :--- | :--- | :--- |
+| **Autenticación** | Ingresar usuario y contraseña en `/Login`. La aplicación crea una cookie de sesión cifrada y almacena el JWT. | Enviar `POST /api/auth/login` con payload `{ "username": "admin", "password": "admin123" }` para obtener el Bearer Token. |
+| **Cerrar Sesión** | Clic en el botón **"Cerrar Sesión"** en la barra superior. Elimina la cookie y redirige a `/Login`. | Invalidar el token del lado cliente o esperar a su expiración (60 min). |
+| **Consultar Valorización** | Visualización automática de tarjetas KPI de resumen y tabla consolidada por categoría. | Enviar `GET /api/products/inventory-value-by-category` con cabecera `Authorization: Bearer <token>`. |
+| **Consultar Bajo Stock** | Tabla de alertas con insignias de stock crítico y orden ascendente por existencias. | Enviar `GET /api/products/low-stock?threshold=10` con cabecera `Authorization: Bearer <token>`. |
+| **Registrar Producto** | Clic en el botón **"+ Nuevo Producto"**, completar el modal y enviar. Retroalimentación con **SweetAlert2**. | Enviar `POST /api/products` con JSON `{ "name": "...", "category": "...", "price": 0.0, "stock": 0 }` y token Bearer. |
+| **Personalización** | Alternar entre **Modo Oscuro / Claro** con el botón de la barra de navegación. | N/A (Consumo de datos puro en formato JSON). |
+
+---
+
+## 🔄 Flujos de Procesos y Actividades
+
+### 1. 🔐 Flujo de Autenticación y Gestión de Sesión
+```
+[ Usuario ] ──▶ [ Formulario /Login ]
+                       │
+                       ▼ (Credenciales)
+               [ InventoryApiService ] ──▶ [ POST /api/auth/login ] ──▶ [ Valida HMAC SHA-256 ]
+                       │                                                        │
+                       ▼ (Retorna JWT)                                          ▼
+            [ HttpContext.SignInAsync ] ◀────────────────────────────── [ Token JWT Emitido ]
+                       │
+                       ▼
+          [ Redirección a /Index con Cookie ]
+                       │
+                       ▼
+          [ Navbar: Muestra "Usuario: admin" + Botón Logout ]
+```
+
+---
+
+### 2. 📝 Flujo de Creación de Producto (Command Side - EF Core)
+```
+[ Usuario ] ──▶ [ Modal: Nuevo Producto ]
+                       │
+                       ▼ (Validación cliente: Regex Anti-SQLi, Rangos numéricos)
+               [ OnPostCreateProductAsync ]
+                       │
+                       ▼ (Llamada HTTP con Bearer Token)
+               [ POST /api/products ]
+                       │
+                       ▼
+             [ MediatR: AddProductCommand ]
+                       │
+                       ▼
+          [ Product.Create (Invariantes DDD) ]
+                       │
+                       ▼
+      [ ProductRepository.AddAsync + SaveChangesAsync ] ──▶ [ SQL Server: INSERT INTO Products ]
+                       │
+                       ▼
+              [ 201 Created (Guid) ]
+                       │
+                       ▼
+     [ Inventory.Web: Alerta SweetAlert2 de Éxito ]
+```
+
+---
+
+### 3. 📊 Flujo de Consulta y Reporte Analítico (Query Side - Dapper)
+```
+[ Carga de /Index ] ──▶ [ IndexModel.OnGetAsync() ]
+                                   │
+              ┌────────────────────┴────────────────────┐
+              ▼ (Task 1)                                ▼ (Task 2)
+   [ GetInventoryValueByCategory ]            [ GetLowStockProducts(10) ]
+              │                                         │
+              ▼                                         ▼
+   [ GET /api/.../category ]                  [ GET /api/.../low-stock ]
+              │                                         │
+              ▼                                         ▼
+  [ MediatR: CategoryQuery ]                [ MediatR: LowStockQuery ]
+              │                                         │
+              ▼                                         ▼
+ [ Dapper: sp_GetInventoryValue... ]       [ Dapper: SELECT WITH (NOLOCK) ]
+              │                                         │
+              └────────────────────┬────────────────────┘
+                                   │ Task.WhenAll()
+                                   ▼
+          [ Renderizado de Métricas KPI y Tablas en Razor ]
+```
+
+---
+
 ## 🎨 Características Adicionales del Frontend
 * **Modo Oscuro / Claro:** Detección de preferencia del sistema operativo y selector persistente en la barra de navegación.
 * **Notificaciones SweetAlert2:** Retroalimentación visual interactiva en la creación de productos y errores de validación.
 * **Seguridad:** Sanitización de entradas contra inyecciones SQL en cliente y servidor.
+* **Sesión con Cookie & JWT:** Manejo transparente de credenciales y propagación de identidad.
 
 ---
 
