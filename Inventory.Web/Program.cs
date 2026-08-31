@@ -1,5 +1,5 @@
-// Inventory.Web/Program.cs
 using Inventory.Web.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +21,23 @@ builder.Services.AddRazorPages()
         p.SetMissingRequestBodyRequiredValueAccessor(() => "El cuerpo de la solicitud no puede estar vacío.");
     });
 
-// 2. Registro del Typed HttpClient para el servicio de API
+// 2. Configuración de Autenticación con Cookies para la sesión Web
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login";
+        options.LogoutPath = "/Logout";
+        options.AccessDeniedPath = "/Login";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.Name = "InventoryAuthCookie";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+    });
+
+builder.Services.AddHttpContextAccessor();
+
+// 3. Registro del Typed HttpClient para el servicio de API
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5102";
 
 builder.Services.AddHttpClient<IInventoryApiService, InventoryApiService>(client =>
@@ -48,6 +64,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();

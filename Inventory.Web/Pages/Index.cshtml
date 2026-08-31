@@ -65,14 +65,14 @@
     <div class="row g-4">
         <!-- Tabla 1: Resumen por Categoría -->
         <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card border-0 shadow-sm rounded-3 h-100 d-flex flex-column">
                 <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-pie-chart text-primary me-2"></i>Resumen por Categoría
                     </h5>
                     <span class="badge bg-primary-subtle text-primary fw-semibold">Dapper Stored Procedure</span>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 flex-grow-1">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
@@ -84,9 +84,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (Model.InventorySummary.Any())
+                                @if (Model.PagedCategorySummary.Any())
                                 {
-                                    @foreach (var item in Model.InventorySummary)
+                                    @foreach (var item in Model.PagedCategorySummary)
                                     {
                                         <tr>
                                             <td class="ps-4 fw-semibold">@item.Category</td>
@@ -112,19 +112,86 @@
                         </table>
                     </div>
                 </div>
+                <!-- Paginación de Resumen por Categoría -->
+                @if (Model.CatTotalItems > 0)
+                {
+                    var catStart = (Model.CatPage - 1) * IndexModel.PageSize + 1;
+                    var catEnd = Math.Min(Model.CatPage * IndexModel.PageSize, Model.CatTotalItems);
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-4 py-2 border-top bg-body-tertiary rounded-bottom-3">
+                        <span class="small text-muted">
+                            Mostrando <strong>@catStart</strong> - <strong>@catEnd</strong> de <strong>@Model.CatTotalItems</strong> categorías
+                        </span>
+                        @if (Model.CatTotalPages > 1)
+                        {
+                            <nav aria-label="Paginación de categorías">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item @(Model.CatPage <= 1 ? "disabled" : "")">
+                                        <a class="page-link" href="?catPage=@(Model.CatPage - 1)&stockPage=@Model.StockPage&threshold=@Model.Threshold" aria-label="Anterior">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    @for (int i = 1; i <= Model.CatTotalPages; i++)
+                                    {
+                                        <li class="page-item @(Model.CatPage == i ? "active" : "")">
+                                            <a class="page-link" href="?catPage=@i&stockPage=@Model.StockPage&threshold=@Model.Threshold">@i</a>
+                                        </li>
+                                    }
+                                    <li class="page-item @(Model.CatPage >= Model.CatTotalPages ? "disabled" : "")">
+                                        <a class="page-link" href="?catPage=@(Model.CatPage + 1)&stockPage=@Model.StockPage&threshold=@Model.Threshold" aria-label="Siguiente">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        }
+                    </div>
+                }
             </div>
         </div>
 
         <!-- Tabla 2: Alertas de Bajo Stock -->
         <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>Alertas de Bajo Stock (&le; 10)
-                    </h5>
-                    <span class="badge bg-danger-subtle text-danger fw-semibold">Dapper Query</span>
+            <div class="card border-0 shadow-sm rounded-3 h-100 d-flex flex-column">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-danger d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Alertas de Bajo Stock (&le; @Model.Threshold)
+                        </h5>
+                    </div>
+                    <!-- Formulario interactivo para modificar el umbral de bajo stock -->
+                    <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+                        <input type="hidden" name="catPage" value="@Model.CatPage" />
+                        <input type="hidden" name="stockPage" value="1" />
+                        <div class="input-group input-group-sm" style="width: 165px;">
+                            <span class="input-group-text bg-body-tertiary border-end-0 small text-muted">&le;</span>
+                            <input type="number" 
+                                   name="threshold" 
+                                   id="thresholdInput"
+                                   value="@Model.Threshold" 
+                                   min="0" 
+                                   max="10000" 
+                                   step="1"
+                                   inputmode="numeric"
+                                   pattern="[0-9]*"
+                                   class="form-control text-center fw-bold" 
+                                   title="Solo se permiten números enteros positivos o cero (no negativos ni letras)"
+                                   onkeydown="if(['-', '+', 'e', 'E', '.', ','].includes(event.key)) event.preventDefault();"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value !== '' && parseInt(this.value, 10) < 0) this.value = '0';"
+                                   onpaste="let pasteData = (event.clipboardData || window.clipboardData).getData('text'); if(!/^\d+$/.test(pasteData)) event.preventDefault();" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Aplicar nuevo umbral">
+                                <i class="bi bi-funnel-fill"></i>
+                            </button>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Accesos directos de umbral">
+                            <a href="?threshold=5&catPage=@Model.CatPage&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 5 ? "active" : "")">5</a>
+                            <a href="?threshold=10&catPage=@Model.CatPage&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 10 ? "active" : "")">10</a>
+                            <a href="?threshold=20&catPage=@Model.CatPage&stockPage=1" class="btn btn-outline-secondary btn-sm @(Model.Threshold == 20 ? "active" : "")">20</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 flex-grow-1">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
@@ -137,9 +204,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (Model.LowStockProducts.Any())
+                                @if (Model.PagedLowStockProducts.Any())
                                 {
-                                    @foreach (var prod in Model.LowStockProducts)
+                                    @foreach (var prod in Model.PagedLowStockProducts)
                                     {
                                         <tr>
                                             <td class="ps-4 fw-semibold">@prod.Name</td>
@@ -160,7 +227,7 @@
                                 {
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-muted">
-                                            <i class="bi bi-check-circle text-success me-1"></i> No hay productos con stock crítico en este momento.
+                                            <i class="bi bi-check-circle text-success me-1"></i> No hay productos con existencias &le; @Model.Threshold.
                                         </td>
                                     </tr>
                                 }
@@ -168,6 +235,41 @@
                         </table>
                     </div>
                 </div>
+                <!-- Paginación de Alertas de Bajo Stock -->
+                @if (Model.StockTotalItems > 0)
+                {
+                    var stockStart = (Model.StockPage - 1) * IndexModel.PageSize + 1;
+                    var stockEnd = Math.Min(Model.StockPage * IndexModel.PageSize, Model.StockTotalItems);
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 px-4 py-2 border-top bg-body-tertiary rounded-bottom-3">
+                        <span class="small text-muted">
+                            Mostrando <strong>@stockStart</strong> - <strong>@stockEnd</strong> de <strong>@Model.StockTotalItems</strong> productos
+                        </span>
+                        @if (Model.StockTotalPages > 1)
+                        {
+                            <nav aria-label="Paginación de bajo stock">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item @(Model.StockPage <= 1 ? "disabled" : "")">
+                                        <a class="page-link" href="?stockPage=@(Model.StockPage - 1)&catPage=@Model.CatPage&threshold=@Model.Threshold" aria-label="Anterior">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    @for (int i = 1; i <= Model.StockTotalPages; i++)
+                                    {
+                                        <li class="page-item @(Model.StockPage == i ? "active" : "")">
+                                            <a class="page-link" href="?stockPage=@i&catPage=@Model.CatPage&threshold=@Model.Threshold">@i</a>
+                                        </li>
+                                    }
+                                    <li class="page-item @(Model.StockPage >= Model.StockTotalPages ? "disabled" : "")">
+                                        <a class="page-link" href="?stockPage=@(Model.StockPage + 1)&catPage=@Model.CatPage&threshold=@Model.Threshold" aria-label="Siguiente">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        }
+                    </div>
+                }
             </div>
         </div>
     </div>

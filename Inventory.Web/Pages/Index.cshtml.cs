@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using Inventory.Domain.Models;
 using Inventory.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -9,8 +10,10 @@ namespace Inventory.Web.Pages;
 
 /// <summary>
 /// Modelo de página Razor (PageModel) para el panel principal de inventario.
+/// Protegido con autenticación obligatoria.
 /// Gestiona la visualización de métricas analíticas, tablas y procesamiento del formulario de creación.
 /// </summary>
+[Authorize]
 public class IndexModel : PageModel
 {
     private readonly IInventoryApiService _apiService;
@@ -24,6 +27,19 @@ public class IndexModel : PageModel
 
     [BindProperty]
     public CreateProductInput NewProduct { get; set; } = new();
+
+    // Filtro dinámico de umbral de bajo stock
+    [BindProperty(SupportsGet = true)]
+    public int Threshold { get; set; } = 10;
+
+    // Parámetros de paginación para ambas tablas
+    [BindProperty(SupportsGet = true)]
+    public int CatPage { get; set; } = 1;
+
+    [BindProperty(SupportsGet = true)]
+    public int StockPage { get; set; } = 1;
+
+    public const int PageSize = 10;
 
     // Propiedades TempData para persistir el estado de alertas y disparar SweetAlert2 tras redirecciones
     [TempData]
@@ -43,20 +59,39 @@ public class IndexModel : PageModel
     public int TotalGlobalUnits => InventorySummary.Sum(x => x.TotalUnits);
     public int TotalGlobalProducts => InventorySummary.Sum(x => x.ProductCount);
 
+    // Cálculos de Paginación para Resumen por Categoría
+    public int CatTotalItems => InventorySummary.Count();
+    public int CatTotalPages => Math.Max(1, (int)Math.Ceiling((double)CatTotalItems / PageSize));
+    public IEnumerable<CategoryInventoryValue> PagedCategorySummary =>
+        InventorySummary.Skip((Math.Max(1, CatPage) - 1) * PageSize).Take(PageSize);
+
+    // Cálculos de Paginación para Alertas de Bajo Stock
+    public int StockTotalItems => LowStockProducts.Count();
+    public int StockTotalPages => Math.Max(1, (int)Math.Ceiling((double)StockTotalItems / PageSize));
+    public IEnumerable<ProductDto> PagedLowStockProducts =>
+        LowStockProducts.Skip((Math.Max(1, StockPage) - 1) * PageSize).Take(PageSize);
+
     /// <summary>
-    /// Carga en paralelo las consultas de valorización y bajo stock al renderizar la página.
+    /// Carga en paralelo las consultas de valorización y bajo stock con el umbral especificado.
     /// </summary>
     public async Task OnGetAsync()
     {
+        if (Threshold < 0) Threshold = 10;
+        if (CatPage < 1) CatPage = 1;
+        if (StockPage < 1) StockPage = 1;
+
         try
         {
             var summaryTask = _apiService.GetInventoryValueByCategoryAsync();
-            var lowStockTask = _apiService.GetLowStockProductsAsync(threshold: 10);
+            var lowStockTask = _apiService.GetLowStockProductsAsync(threshold: Threshold);
 
             await Task.WhenAll(summaryTask, lowStockTask);
 
             InventorySummary = await summaryTask;
             LowStockProducts = await lowStockTask;
+
+            if (CatPage > CatTotalPages) CatPage = CatTotalPages;
+            if (StockPage > StockTotalPages) StockPage = StockTotalPages;
         }
         catch (Exception ex)
         {
@@ -110,7 +145,7 @@ public class IndexModel : PageModel
             StatusType = "error";
         }
 
-        return RedirectToPage();
+        return RedirectToPage(new { threshold = Threshold, catPage = CatPage, stockPage = StockPage });
     }
 }
 
