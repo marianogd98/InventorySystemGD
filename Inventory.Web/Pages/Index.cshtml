@@ -8,8 +8,8 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
-            <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-boxes"></i> Panel de Control de Inventario
+            <h1 class="h3 mb-0 fw-bold">
+                <i class="bi bi-boxes text-primary"></i> Panel de Control de Inventario
             </h1>
             <p class="text-muted mb-0">Monitoreo en tiempo real del estado de existencias y valorización por categoría.</p>
         </div>
@@ -23,15 +23,7 @@
         </div>
     </div>
 
-    <!-- Alert Notifications -->
-    @if (!string.IsNullOrEmpty(Model.StatusMessage))
-    {
-        <div class="alert alert-@Model.StatusType alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi @(Model.StatusType == "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></i>
-            @Model.StatusMessage
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+
 
     <!-- KPI Summary Cards -->
     <div class="row g-3 mb-4">
@@ -74,8 +66,8 @@
         <!-- Tabla 1: Resumen por Categoría -->
         <div class="col-12 col-lg-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
                         <i class="bi bi-pie-chart text-primary me-2"></i>Resumen por Categoría
                     </h5>
                     <span class="badge bg-primary-subtle text-primary fw-semibold">Dapper Stored Procedure</span>
@@ -97,7 +89,7 @@
                                     @foreach (var item in Model.InventorySummary)
                                     {
                                         <tr>
-                                            <td class="ps-4 fw-semibold text-dark">@item.Category</td>
+                                            <td class="ps-4 fw-semibold">@item.Category</td>
                                             <td class="text-center">
                                                 <span class="badge bg-light text-dark border">@item.ProductCount prod.</span>
                                             </td>
@@ -126,8 +118,8 @@
         <!-- Tabla 2: Alertas de Bajo Stock -->
         <div class="col-12 col-lg-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-dark">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
                         <i class="bi bi-exclamation-triangle text-danger me-2"></i>Alertas de Bajo Stock (&le; 10)
                     </h5>
                     <span class="badge bg-danger-subtle text-danger fw-semibold">Dapper Query</span>
@@ -150,7 +142,7 @@
                                     @foreach (var prod in Model.LowStockProducts)
                                     {
                                         <tr>
-                                            <td class="ps-4 fw-semibold text-dark">@prod.Name</td>
+                                            <td class="ps-4 fw-semibold">@prod.Name</td>
                                             <td>
                                                 <span class="badge bg-secondary-subtle text-secondary">@prod.Category</span>
                                             </td>
@@ -265,5 +257,48 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: '@(Model.StatusType ?? "info")',
+                    title: '@Html.Raw(Model.StatusTitle ?? "Notificación")',
+                    html: `@Html.Raw(Model.StatusMessage)`,
+                    confirmButtonColor: '#0d6efd',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        popup: 'shadow-lg rounded-4'
+                    }
+                });
+            });
+        </script>
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('createProductForm');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    if (window.jQuery && $(form).valid && !$(form).valid()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Campos Inválidos o Incompletos',
+                            html: 'Por favor, revisa las alertas en rojo en el formulario antes de guardar el producto.',
+                            confirmButtonColor: '#0d6efd',
+                            confirmButtonText: 'Entendido',
+                            customClass: {
+                                popup: 'shadow-lg rounded-4'
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
 }
 

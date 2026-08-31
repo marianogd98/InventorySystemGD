@@ -8,6 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Inventory.Api.Controllers;
 
+/// <summary>
+/// Controlador de autenticación y emisión de JSON Web Tokens (JWT).
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -20,7 +23,7 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Endpoint de autenticación para obtener un Token JWT de prueba.
+    /// Endpoint para autenticar usuarios y obtener un Bearer Token JWT.
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -28,7 +31,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Login([FromBody] LoginRequest request)
     {
-        // Validación básica de credenciales para prueba técnica
+        // Validación de credenciales de prueba
         if (request.Username != "admin" || request.Password != "admin123")
         {
             return Unauthorized(new { Message = "Credenciales inválidas. Usa admin / admin123 para pruebas." });
@@ -44,6 +47,7 @@ public class AuthController : ControllerBase
         var key = Encoding.UTF8.GetBytes(jwtKey);
         var expires = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
+        // Definición de Claims y firma digital con HMAC SHA-256
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
@@ -73,5 +77,8 @@ public class AuthController : ControllerBase
     }
 }
 
+/// <summary>
+/// Modelo de solicitud para autenticación.
+/// </summary>
 public record LoginRequest(string Username, string Password);
 

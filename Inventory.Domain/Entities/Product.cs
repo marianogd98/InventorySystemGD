@@ -5,8 +5,10 @@ namespace Inventory.Domain.Entities;
 
 public class Product
 {
-    // Permite caracteres alfanuméricos, espacios, tildes y caracteres seguros (. , _ / # ( ) -)
-    // Bloquea caracteres típicos de inyecciones SQL como ', ", ;, --, /*, <, >, =, etc.
+    /// <summary>
+    /// Expresión regular para admitir únicamente texto seguro (alfanumérico, tildes, ñ y signos no destructivos).
+    /// Previene vectores comunes de inyección SQL como ', ", ;, --, /*, etc.
+    /// </summary>
     private static readonly Regex SafeTextRegex = new(
         @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$",
         RegexOptions.Compiled);
@@ -18,10 +20,10 @@ public class Product
     public int Stock { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    // Constructor privado para requerimientos de EF Core / Dapper
+    // Constructor sin parámetros requerido por ORMs / Mappers (EF Core, Dapper)
     private Product() { }
 
-    // Constructor privado para forzar el uso del Factory Method
+    // Constructor privado para encapsular la instanciación y obligar el paso por el Factory Method
     private Product(Guid id, string name, string category, decimal price, int stock, DateTime createdAt)
     {
         Id = id;
@@ -33,7 +35,7 @@ public class Product
     }
 
     /// <summary>
-    /// Factory Method para asegurar la creación de una entidad en un estado válido.
+    /// Factory Method: Valida invariantes del dominio y asegura que la entidad nunca nazca en un estado inválido.
     /// </summary>
     public static Product Create(string name, string category, decimal price, int stock)
     {
@@ -65,6 +67,9 @@ public class Product
         );
     }
 
+    /// <summary>
+    /// Actualiza el precio del producto garantizando que permanezca positivo.
+    /// </summary>
     public void UpdatePrice(decimal newPrice)
     {
         if (newPrice < 0)
@@ -73,6 +78,9 @@ public class Product
         Price = newPrice;
     }
 
+    /// <summary>
+    /// Incrementa las existencias del producto validando cantidades estrictamente positivas.
+    /// </summary>
     public void AddStock(int quantity)
     {
         if (quantity <= 0)
@@ -81,6 +89,9 @@ public class Product
         Stock += quantity;
     }
 
+    /// <summary>
+    /// Reduce existencias protegiendo la regla de negocio de no permitir stock negativo.
+    /// </summary>
     public void RemoveStock(int quantity)
     {
         if (quantity <= 0)

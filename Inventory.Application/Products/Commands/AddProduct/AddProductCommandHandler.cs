@@ -6,6 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Inventory.Application.Products.Commands.AddProduct;
 
+/// <summary>
+/// Manejador del comando AddProductCommand.
+/// Orquesta la instanciación con el Dominio y persiste los cambios mediante EF Core.
+/// </summary>
 public class AddProductCommandHandler : IRequestHandler<AddProductCommand, Guid>
 {
     private readonly IProductRepository _productRepository;
@@ -21,9 +25,9 @@ public class AddProductCommandHandler : IRequestHandler<AddProductCommand, Guid>
 
     public async Task<Guid> Handle(AddProductCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Iniciando creación de producto con Nombre: {ProductName}, Categoría: {Category}", request.Name, request.Category);
+        _logger.LogInformation("Iniciando creación de producto: '{ProductName}' en la categoría '{Category}'", request.Name, request.Category);
 
-        // Se valida e instancia la entidad a través del Factory Method del Dominio
+        // 1. Creación segura y validación mediante Factory Method del Dominio (DDD)
         var product = Product.Create(
             name: request.Name,
             category: request.Category,
@@ -31,10 +35,11 @@ public class AddProductCommandHandler : IRequestHandler<AddProductCommand, Guid>
             stock: request.Stock
         );
 
+        // 2. Persistencia en base de datos a través del repositorio EF Core
         await _productRepository.AddAsync(product);
         await _productRepository.SaveChangesAsync();
 
-        _logger.LogInformation("Producto creado exitosamente con Id: {ProductId}, Nombre: {ProductName}", product.Id, product.Name);
+        _logger.LogInformation("Producto creado exitosamente. Id: {ProductId}, Nombre: '{ProductName}'", product.Id, product.Name);
 
         return product.Id;
     }

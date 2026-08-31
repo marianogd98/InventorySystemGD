@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.Api.Controllers;
 
+/// <summary>
+/// Controlador REST para operaciones de inventario.
+/// Desacopla la capa HTTP de la lógica de negocio delegando comandos y consultas a MediatR.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
@@ -19,7 +23,7 @@ public class ProductsController : ControllerBase
     }
 
     /// <summary>
-    /// Crea un nuevo producto en el inventario.
+    /// POST api/products - Crea un nuevo producto (Command Side / EF Core).
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -33,16 +37,18 @@ public class ProductsController : ControllerBase
         }
         catch (ArgumentOutOfRangeException ex)
         {
+            // Errores de validación de rangos numéricos del dominio (precio o stock negativo)
             return BadRequest(new { error = ex.Message });
         }
         catch (ArgumentException ex)
         {
+            // Errores de invariantes de texto del dominio (nombres vacíos o caracteres de inyección SQL)
             return BadRequest(new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// Consulta los productos con stock menor o igual al umbral especificado.
+    /// GET api/products/low-stock - Consulta productos bajo el umbral de existencias (Query Side / Dapper).
     /// </summary>
     [HttpGet("low-stock")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -55,7 +61,7 @@ public class ProductsController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene el valor total y unidades del inventario agrupados por categoría.
+    /// GET api/products/inventory-value-by-category - Reporte agregado por categoría vía Stored Procedure.
     /// </summary>
     [HttpGet("inventory-value-by-category")]
     [ProducesResponseType(StatusCodes.Status200OK)]

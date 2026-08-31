@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Inventory.Web.Pages;
 
+/// <summary>
+/// Modelo de página Razor (PageModel) para el panel principal de inventario.
+/// Gestiona la visualización de métricas analíticas, tablas y procesamiento del formulario de creación.
+/// </summary>
 public class IndexModel : PageModel
 {
     private readonly IInventoryApiService _apiService;
@@ -21,6 +25,10 @@ public class IndexModel : PageModel
     [BindProperty]
     public CreateProductInput NewProduct { get; set; } = new();
 
+    // Propiedades TempData para persistir el estado de alertas y disparar SweetAlert2 tras redirecciones
+    [TempData]
+    public string? StatusTitle { get; set; }
+
     [TempData]
     public string? StatusMessage { get; set; }
 
@@ -30,10 +38,14 @@ public class IndexModel : PageModel
     public IEnumerable<CategoryInventoryValue> InventorySummary { get; private set; } = Enumerable.Empty<CategoryInventoryValue>();
     public IEnumerable<ProductDto> LowStockProducts { get; private set; } = Enumerable.Empty<ProductDto>();
 
+    // Métricas calculadas para las tarjetas KPI
     public decimal TotalGlobalValue => InventorySummary.Sum(x => x.TotalInventoryValue);
     public int TotalGlobalUnits => InventorySummary.Sum(x => x.TotalUnits);
     public int TotalGlobalProducts => InventorySummary.Sum(x => x.ProductCount);
 
+    /// <summary>
+    /// Carga en paralelo las consultas de valorización y bajo stock al renderizar la página.
+    /// </summary>
     public async Task OnGetAsync()
     {
         try
@@ -52,12 +64,26 @@ public class IndexModel : PageModel
         }
     }
 
+    /// <summary>
+    /// Manejador POST para registrar un nuevo producto a través de la API.
+    /// </summary>
     public async Task<IActionResult> OnPostCreateProductAsync()
     {
         if (!ModelState.IsValid)
         {
-            StatusMessage = "Por favor, verifica los campos ingresados.";
-            StatusType = "danger";
+            var errorList = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .Where(msg => !string.IsNullOrWhiteSpace(msg))
+                .Distinct()
+                .ToList();
+
+            StatusTitle = "Advertencia en el Formulario";
+            StatusMessage = errorList.Count > 0
+                ? $"<ul class='text-start mb-0 ps-3'><li>{string.Join("</li><li>", errorList)}</li></ul>"
+                : "Por favor, verifica los campos ingresados.";
+            StatusType = "warning";
+
             await OnGetAsync();
             return Page();
         }
@@ -71,21 +97,27 @@ public class IndexModel : PageModel
 
         if (success)
         {
-            StatusMessage = $"¡Producto '{NewProduct.Name}' registrado exitosamente!";
+            StatusTitle = "¡Producto Creado!";
+            StatusMessage = $"El producto <strong>{NewProduct.Name}</strong> ha sido registrado exitosamente en el inventario.";
             StatusType = "success";
         }
         else
         {
+            StatusTitle = "Error al Registrar Producto";
             StatusMessage = !string.IsNullOrEmpty(errorMessage)
-                ? $"No se pudo registrar el producto: {errorMessage}"
-                : "No se pudo registrar el producto. Verifica que la API esté activa y las credenciales sean correctas.";
-            StatusType = "danger";
+                ? errorMessage
+                : "No se pudo registrar el producto. Verifica que la API y la base de datos estén activas.";
+            StatusType = "error";
         }
 
         return RedirectToPage();
     }
 }
 
+/// <summary>
+/// Modelo de entrada y validación para el formulario de creación de productos.
+/// Incluye DataAnnotations y validación de expresiones regulares contra inyecciones SQL.
+/// </summary>
 public class CreateProductInput
 {
     private const string SafeTextPattern = @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$";

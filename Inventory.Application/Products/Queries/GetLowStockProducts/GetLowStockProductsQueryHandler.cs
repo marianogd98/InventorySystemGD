@@ -5,6 +5,10 @@ using MediatR;
 
 namespace Inventory.Application.Products.Queries.GetLowStockProducts;
 
+/// <summary>
+/// Manejador de consulta para bajo stock.
+/// Utiliza Dapper para lecturas de alto rendimiento sin sobrecarga de seguimiento de entidades.
+/// </summary>
 public class GetLowStockProductsQueryHandler : IRequestHandler<GetLowStockProductsQuery, IEnumerable<Product>>
 {
     private readonly IInventoryQueries _inventoryQueries;

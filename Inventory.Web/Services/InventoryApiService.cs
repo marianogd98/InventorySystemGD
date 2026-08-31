@@ -6,8 +6,14 @@ using Inventory.Domain.Models;
 
 namespace Inventory.Web.Services;
 
+/// <summary>
+/// Respuesta del endpoint de autenticación con el token JWT emitido.
+/// </summary>
 public record AuthResponse(string Token, string TokenType, DateTime ExpiresAt);
 
+/// <summary>
+/// DTO para transferir información de productos al cliente web.
+/// </summary>
 public record ProductDto(
     Guid Id,
     string Name,
@@ -17,6 +23,9 @@ public record ProductDto(
     DateTime CreatedAt
 );
 
+/// <summary>
+/// Contrato del servicio HTTP cliente para comunicar la capa Web con la API REST.
+/// </summary>
 public interface IInventoryApiService
 {
     Task<bool> AuthenticateAsync(string username = "admin", string password = "admin123");
@@ -25,6 +34,10 @@ public interface IInventoryApiService
     Task<(bool Success, string? ErrorMessage)> CreateProductAsync(string name, string category, decimal price, int stock);
 }
 
+/// <summary>
+/// Implementación del servicio cliente usando Typed HttpClient.
+/// Administra la autenticación JWT automática y reintentos ante respuestas 401 Unauthorized.
+/// </summary>
 public class InventoryApiService : IInventoryApiService
 {
     private readonly HttpClient _httpClient;
