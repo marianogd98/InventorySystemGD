@@ -3,14 +3,17 @@ using Inventory.Application.Products.Commands.AddProduct;
 using Inventory.Application.Products.Queries.GetInventoryValueByCategory;
 using Inventory.Application.Products.Queries.GetLowStockProducts;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.Api.Controllers;
 
 /// <summary>
 /// Controlador REST para operaciones de inventario.
+/// Protegido mediante autenticación JWT (Bearer Token).
 /// Desacopla la capa HTTP de la lógica de negocio delegando comandos y consultas a MediatR.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
