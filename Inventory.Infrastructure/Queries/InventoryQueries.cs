@@ -35,6 +35,7 @@ public class InventoryQueries : IInventoryQueries
             ORDER BY Stock ASC;";
 
         using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
         return await connection.QueryAsync<Product>(sql, new { Threshold = threshold });
     }
 
@@ -43,10 +44,10 @@ public class InventoryQueries : IInventoryQueries
         const string storedProcedure = "dbo.sp_GetInventoryValueByCategory";
 
         using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
         return await connection.QueryAsync<CategoryInventoryValue>(
             storedProcedure,
             commandType: CommandType.StoredProcedure
         );
     }
 }
-

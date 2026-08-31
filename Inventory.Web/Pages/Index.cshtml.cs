@@ -62,7 +62,7 @@ public class IndexModel : PageModel
             return Page();
         }
 
-        var success = await _apiService.CreateProductAsync(
+        var (success, errorMessage) = await _apiService.CreateProductAsync(
             name: NewProduct.Name,
             category: NewProduct.Category,
             price: NewProduct.Price,
@@ -76,7 +76,9 @@ public class IndexModel : PageModel
         }
         else
         {
-            StatusMessage = "No se pudo registrar el producto. Verifica que la API esté activa y las credenciales sean correctas.";
+            StatusMessage = !string.IsNullOrEmpty(errorMessage)
+                ? $"No se pudo registrar el producto: {errorMessage}"
+                : "No se pudo registrar el producto. Verifica que la API esté activa y las credenciales sean correctas.";
             StatusType = "danger";
         }
 
@@ -86,19 +88,28 @@ public class IndexModel : PageModel
 
 public class CreateProductInput
 {
+    private const string SafeTextPattern = @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$";
+    private const string SafeTextErrorMessage = "No se permiten caracteres especiales que puedan usarse para inyecciones SQL (como comillas, punto y coma, comentarios, etc.).";
+
+    [Display(Name = "Nombre")]
     [Required(ErrorMessage = "El nombre del producto es obligatorio.")]
     [StringLength(150, ErrorMessage = "El nombre no puede exceder los 150 caracteres.")]
+    [RegularExpression(SafeTextPattern, ErrorMessage = "El nombre contiene caracteres especiales no permitidos.")]
     public string Name { get; set; } = string.Empty;
 
+    [Display(Name = "Categoría")]
     [Required(ErrorMessage = "La categoría es obligatoria.")]
     [StringLength(100, ErrorMessage = "La categoría no puede exceder los 100 caracteres.")]
+    [RegularExpression(SafeTextPattern, ErrorMessage = "La categoría contiene caracteres especiales no permitidos.")]
     public string Category { get; set; } = string.Empty;
 
+    [Display(Name = "Precio")]
     [Required(ErrorMessage = "El precio es obligatorio.")]
-    [Range(0.01, 1000000.00, ErrorMessage = "El precio debe ser mayor a 0.")]
+    [Range(0.01, 1000000.00, ErrorMessage = "El precio debe ser mayor a 0 y no puede ser negativo.")]
     public decimal Price { get; set; }
 
+    [Display(Name = "Stock inicial")]
     [Required(ErrorMessage = "El stock inicial es obligatorio.")]
-    [Range(0, 100000, ErrorMessage = "El stock no puede ser negativo.")]
+    [Range(0, 100000, ErrorMessage = "El stock no puede ser negativo (debe ser 0 o mayor).")]
     public int Stock { get; set; }
 }

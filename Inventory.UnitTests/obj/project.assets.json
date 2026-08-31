@@ -6046,11 +6046,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
+      "projectUniqueName": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
       "projectName": "Inventory.UnitTests",
-      "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
+      "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
       "packagesPath": "C:\\Users\\Mariano\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.UnitTests\\obj\\",
+      "outputPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.UnitTests\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Mariano\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -6065,11 +6065,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Application\\Inventory.Application.csproj": {
-              "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Application\\Inventory.Application.csproj"
+            "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Application\\Inventory.Application.csproj": {
+              "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Application\\Inventory.Application.csproj"
             },
-            "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
-              "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj"
+            "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
+              "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj"
             }
           }
         }

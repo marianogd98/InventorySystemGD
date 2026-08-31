@@ -26,8 +26,19 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AddProduct([FromBody] AddProductCommand command)
     {
-        var productId = await _mediator.Send(command);
-        return StatusCode(StatusCodes.Status201Created, new { Id = productId });
+        try
+        {
+            var productId = await _mediator.Send(command);
+            return StatusCode(StatusCodes.Status201Created, new { Id = productId });
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>

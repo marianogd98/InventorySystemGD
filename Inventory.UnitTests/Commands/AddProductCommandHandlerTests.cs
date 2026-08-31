@@ -67,6 +67,10 @@ public class AddProductCommandHandlerTests
     [InlineData("   ", "Electrónica", 100, 10)]
     [InlineData("Mouse", "", 100, 10)]
     [InlineData("Mouse", "   ", 100, 10)]
+    [InlineData("Laptop'; DROP TABLE Products;--", "Computación", 100, 10)]
+    [InlineData("Mouse", "Periféricos' OR '1'='1", 100, 10)]
+    [InlineData("Teclado <script>", "Periféricos", 100, 10)]
+    [InlineData("Monitor /* comment */", "Pantallas", 100, 10)]
     public async Task Handle_WithInvalidNameOrCategory_ShouldThrowArgumentException(
         string name,
         string category,

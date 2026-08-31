@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj": {}
+    "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj": {}
   },
   "projects": {
-    "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
+    "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
         "projectName": "Inventory.Domain",
-        "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
+        "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj",
         "packagesPath": "C:\\Users\\Mariano\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\obj\\",
+        "outputPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Mariano\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -62,14 +62,14 @@
         }
       }
     },
-    "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj": {
+    "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj",
+        "projectUniqueName": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj",
         "projectName": "Inventory.Web",
-        "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj",
+        "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\Inventory.Web.csproj",
         "packagesPath": "C:\\Users\\Mariano\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\obj\\",
+        "outputPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Web\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Mariano\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -84,8 +84,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
-                "projectPath": "c:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj"
+              "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj": {
+                "projectPath": "C:\\Users\\Mariano\\Documents\\projects\\InventorySystemGD\\Inventory.Domain\\Inventory.Domain.csproj"
               }
             }
           }

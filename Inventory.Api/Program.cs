@@ -36,7 +36,13 @@ try
 
     // 3. Persistencia con EF Core (Command Side)
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
+        options.UseSqlServer(connectionString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(3),
+                errorNumbersToAdd: null);
+        }));
 
     // 4. Registro de Repositorios y Consultas (DIP & CQRS)
     builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -76,8 +82,23 @@ try
 
     builder.Services.AddAuthorization();
 
-    // 7. Registro de Controladores
-    builder.Services.AddControllers();
+    // 7. Registro de Controladores y validación en español
+    builder.Services.AddControllers()
+        .AddMvcOptions(options =>
+        {
+            var p = options.ModelBindingMessageProvider;
+            p.SetValueMustNotBeNullAccessor(name => $"El campo '{name}' es obligatorio.");
+            p.SetValueIsInvalidAccessor(value => $"El valor '{value}' no es válido.");
+            p.SetValueMustBeANumberAccessor(name => $"El campo '{name}' debe ser un valor numérico (no se permiten letras ni caracteres).");
+            p.SetMissingKeyOrValueAccessor(() => "Se requiere un valor.");
+            p.SetNonPropertyAttemptedValueIsInvalidAccessor(value => $"El valor '{value}' no es válido.");
+            p.SetNonPropertyUnknownValueIsInvalidAccessor(() => "El valor ingresado no es válido.");
+            p.SetNonPropertyValueMustBeANumberAccessor(() => "El valor debe ser un número (no se permiten caracteres).");
+            p.SetUnknownValueIsInvalidAccessor(name => $"El valor ingresado para '{name}' no es válido.");
+            p.SetAttemptedValueIsInvalidAccessor((value, name) => $"El valor '{value}' no es válido para el campo '{name}' (no se permiten letras ni caracteres).");
+            p.SetMissingBindRequiredValueAccessor(name => $"No se suministró un valor para '{name}'.");
+            p.SetMissingRequestBodyRequiredValueAccessor(() => "El cuerpo de la solicitud no puede estar vacío.");
+        });
 
     // 8. Configuración de Swagger con soporte para Bearer Token
     builder.Services.AddEndpointsApiExplorer();
@@ -131,7 +152,10 @@ try
         });
     }
 
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     app.UseAuthentication();
     app.UseAuthorization();

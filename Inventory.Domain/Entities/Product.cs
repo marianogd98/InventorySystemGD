@@ -1,8 +1,16 @@
 // Inventory.Domain/Entities/Product.cs
+using System.Text.RegularExpressions;
+
 namespace Inventory.Domain.Entities;
 
 public class Product
 {
+    // Permite caracteres alfanuméricos, espacios, tildes y caracteres seguros (. , _ / # ( ) -)
+    // Bloquea caracteres típicos de inyecciones SQL como ', ", ;, --, /*, <, >, =, etc.
+    private static readonly Regex SafeTextRegex = new(
+        @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$",
+        RegexOptions.Compiled);
+
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string Category { get; private set; } = string.Empty;
@@ -32,8 +40,14 @@ public class Product
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("El nombre del producto no puede estar vacío.", nameof(name));
 
+        if (!SafeTextRegex.IsMatch(name))
+            throw new ArgumentException("El nombre del producto contiene caracteres especiales no permitidos para prevenir inyecciones SQL.", nameof(name));
+
         if (string.IsNullOrWhiteSpace(category))
             throw new ArgumentException("La categoría del producto no puede estar vacía.", nameof(category));
+
+        if (!SafeTextRegex.IsMatch(category))
+            throw new ArgumentException("La categoría del producto contiene caracteres especiales no permitidos para prevenir inyecciones SQL.", nameof(category));
 
         if (price < 0)
             throw new ArgumentOutOfRangeException(nameof(price), "El precio no puede ser negativo.");

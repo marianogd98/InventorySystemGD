@@ -185,7 +185,7 @@
 <div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <form method="post" asp-page-handler="CreateProduct">
+            <form method="post" asp-page-handler="CreateProduct" novalidate id="createProductForm">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold" id="createProductModalLabel">
                         <i class="bi bi-plus-circle me-1"></i> Registrar Nuevo Producto
@@ -195,25 +195,59 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label asp-for="NewProduct.Name" class="form-label fw-semibold">Nombre del Producto</label>
-                        <input asp-for="NewProduct.Name" class="form-control" placeholder="Ej. Laptop ThinkPad X1" required />
+                        <input asp-for="NewProduct.Name" 
+                               class="form-control" 
+                               placeholder="Ej. Laptop ThinkPad X1" 
+                               pattern="^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$"
+                               data-val="true"
+                               data-val-required="El nombre del producto es obligatorio."
+                               data-val-regex="El nombre contiene caracteres especiales no permitidos para prevenir inyecciones SQL."
+                               required />
                         <span asp-validation-for="NewProduct.Name" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="NewProduct.Category" class="form-label fw-semibold">Categoría</label>
-                        <input asp-for="NewProduct.Category" class="form-control" placeholder="Ej. Laptops, Periféricos, etc." required />
+                        <input asp-for="NewProduct.Category" 
+                               class="form-control" 
+                               placeholder="Ej. Laptops, Periféricos, etc." 
+                               pattern="^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,_/#()\-]+$"
+                               data-val="true"
+                               data-val-required="La categoría es obligatoria."
+                               data-val-regex="La categoría contiene caracteres especiales no permitidos para prevenir inyecciones SQL."
+                               required />
                         <span asp-validation-for="NewProduct.Category" class="text-danger small"></span>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-6">
                             <label asp-for="NewProduct.Price" class="form-label fw-semibold">Precio ($)</label>
-                            <input asp-for="NewProduct.Price" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" required />
+                            <input asp-for="NewProduct.Price" 
+                                   type="number" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   class="form-control" 
+                                   placeholder="0.00" 
+                                   data-val="true"
+                                   data-val-required="El precio es obligatorio."
+                                   data-val-number="El precio debe ser un número válido (no se permiten letras ni caracteres)."
+                                   data-val-range="El precio no puede ser negativo y debe ser mayor a 0."
+                                   required />
                             <span asp-validation-for="NewProduct.Price" class="text-danger small"></span>
                         </div>
                         <div class="col-6">
                             <label asp-for="NewProduct.Stock" class="form-label fw-semibold">Stock Inicial</label>
-                            <input asp-for="NewProduct.Stock" type="number" min="0" class="form-control" placeholder="0" required />
+                            <input asp-for="NewProduct.Stock" 
+                                   type="number" 
+                                   step="1" 
+                                   min="0" 
+                                   class="form-control" 
+                                   placeholder="0" 
+                                   data-val="true"
+                                   data-val-required="El stock inicial es obligatorio."
+                                   data-val-number="El stock debe ser un número entero válido (no se permiten letras ni caracteres)."
+                                   data-val-range="El stock no puede ser negativo (debe ser 0 o mayor)."
+                                   required />
                             <span asp-validation-for="NewProduct.Stock" class="text-danger small"></span>
                         </div>
                     </div>
