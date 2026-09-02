@@ -39,18 +39,18 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public int StockPage { get; set; } = 1;
 
-    // Parámetros de ordenamiento (ASC / DESC) para ambas tablas
+    // Parámetros de ordenamiento (ASC / DESC) para ambas tablas (declarados como opcionales para no interferir en POST)
     [BindProperty(SupportsGet = true)]
-    public string CatSort { get; set; } = "Category";
+    public string? CatSort { get; set; } = "Category";
 
     [BindProperty(SupportsGet = true)]
-    public string CatDir { get; set; } = "asc";
+    public string? CatDir { get; set; } = "asc";
 
     [BindProperty(SupportsGet = true)]
-    public string StockSort { get; set; } = "Stock";
+    public string? StockSort { get; set; } = "Stock";
 
     [BindProperty(SupportsGet = true)]
-    public string StockDir { get; set; } = "asc";
+    public string? StockDir { get; set; } = "asc";
 
     // Parámetros de búsqueda global para cada tabla
     [BindProperty(SupportsGet = true)]
@@ -102,7 +102,7 @@ public class IndexModel : PageModel
     public int CatTotalPages => Math.Max(1, (int)Math.Ceiling((double)CatTotalItems / PageSize));
 
     public IEnumerable<CategoryInventoryValue> SortedCategorySummary =>
-        (CatSort?.ToLower(), CatDir?.ToLower()) switch
+        (CatSort?.ToLower() ?? "category", CatDir?.ToLower() ?? "asc") switch
         {
             ("category", "desc") => FilteredCategorySummary.OrderByDescending(x => x.Category),
             ("category", _) => FilteredCategorySummary.OrderBy(x => x.Category),
@@ -142,7 +142,7 @@ public class IndexModel : PageModel
     public int StockTotalPages => Math.Max(1, (int)Math.Ceiling((double)StockTotalItems / PageSize));
 
     public IEnumerable<ProductDto> SortedLowStockProducts =>
-        (StockSort?.ToLower(), StockDir?.ToLower()) switch
+        (StockSort?.ToLower() ?? "stock", StockDir?.ToLower() ?? "asc") switch
         {
             ("name", "desc") => FilteredLowStockProducts.OrderByDescending(x => x.Name),
             ("name", _) => FilteredLowStockProducts.OrderBy(x => x.Name),
@@ -164,12 +164,12 @@ public class IndexModel : PageModel
     /// Retorna la siguiente dirección de ordenamiento ('asc' o 'desc') al hacer clic en una columna.
     /// </summary>
     public string GetCatNextDir(string column) =>
-        string.Equals(CatSort, column, StringComparison.OrdinalIgnoreCase) && string.Equals(CatDir, "asc", StringComparison.OrdinalIgnoreCase)
+        string.Equals(CatSort ?? "Category", column, StringComparison.OrdinalIgnoreCase) && string.Equals(CatDir ?? "asc", "asc", StringComparison.OrdinalIgnoreCase)
             ? "desc"
             : "asc";
 
     public string GetStockNextDir(string column) =>
-        string.Equals(StockSort, column, StringComparison.OrdinalIgnoreCase) && string.Equals(StockDir, "asc", StringComparison.OrdinalIgnoreCase)
+        string.Equals(StockSort ?? "Stock", column, StringComparison.OrdinalIgnoreCase) && string.Equals(StockDir ?? "asc", "asc", StringComparison.OrdinalIgnoreCase)
             ? "desc"
             : "asc";
 
@@ -206,19 +206,19 @@ public class IndexModel : PageModel
     /// </summary>
     public async Task<IActionResult> OnPostCreateProductAsync()
     {
-        if (!ModelState.IsValid)
-        {
-            var errorList = ModelState.Values
-                .SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .Where(msg => !string.IsNullOrWhiteSpace(msg))
-                .Distinct()
-                .ToList();
+        // Validar únicamente los errores relacionados al modelo de entrada NewProduct
+        var newProductErrors = ModelState
+            .Where(kvp => kvp.Key.StartsWith(nameof(NewProduct)) || kvp.Key == string.Empty)
+            .SelectMany(kvp => kvp.Value?.Errors ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>())
+            .Select(e => e.ErrorMessage)
+            .Where(msg => !string.IsNullOrWhiteSpace(msg))
+            .Distinct()
+            .ToList();
 
+        if (newProductErrors.Count > 0)
+        {
             StatusTitle = "Advertencia en el Formulario";
-            StatusMessage = errorList.Count > 0
-                ? $"<ul class='text-start mb-0 ps-3'><li>{string.Join("</li><li>", errorList)}</li></ul>"
-                : "Por favor, verifica los campos ingresados.";
+            StatusMessage = $"<ul class='text-start mb-0 ps-3'><li>{string.Join("</li><li>", newProductErrors)}</li></ul>";
             StatusType = "warning";
 
             await OnGetAsync();
@@ -251,10 +251,10 @@ public class IndexModel : PageModel
             threshold = Threshold, 
             catPage = CatPage, 
             stockPage = StockPage,
-            catSort = CatSort,
-            catDir = CatDir,
-            stockSort = StockSort,
-            stockDir = StockDir,
+            catSort = CatSort ?? "Category",
+            catDir = CatDir ?? "asc",
+            stockSort = StockSort ?? "Stock",
+            stockDir = StockDir ?? "asc",
             catSearch = CatSearch,
             stockSearch = StockSearch
         });
